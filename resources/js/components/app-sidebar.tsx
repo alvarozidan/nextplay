@@ -1,4 +1,6 @@
 import { Link } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import { ShieldCheck } from 'lucide-react';
 import { BookOpen, FolderGit2, Gamepad2, ClipboardList } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -45,6 +47,16 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props as any;
+    const isAdmin = auth?.user?.role === 'admin';
+
+    const adminNavItems: NavItem[] = isAdmin? [
+        {
+            title: 'Admin Dashboard',
+            href: '/admin',
+            icon: ShieldCheck,
+        },
+    ] : [];
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

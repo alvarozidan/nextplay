@@ -35,7 +35,7 @@ export default function CheckoutShow({ product }: Props) {
     }
 
     return (
-        <AppLayout>
+        <>
             <Head title="Checkout" />
 
             <div className="p-6 max-w-lg mx-auto">
@@ -111,6 +111,6 @@ export default function CheckoutShow({ product }: Props) {
                     </button>
                 </form>
             </div>
-        </AppLayout>
+        </>
     );
 }

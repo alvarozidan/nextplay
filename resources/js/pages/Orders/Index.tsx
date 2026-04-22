@@ -33,7 +33,7 @@ export default function OrdersIndex({ orders }: Props) {
         }).format(price);
 
     return (
-        <AppLayout>
+        <>
             <Head title="Riwayat Transaksi" />
 
             <div className="p-6">
@@ -77,6 +77,6 @@ export default function OrdersIndex({ orders }: Props) {
                     </div>
                 )}
             </div>
-        </AppLayout>
+        </>
     );
 }

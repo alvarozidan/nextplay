@@ -1,21 +1,20 @@
 import { Head, Link } from "@inertiajs/react";
-import AppLayout from "@/layouts/app-layout";
-import storage from "@/routes/storage";
+import { show as GameShow } from "@/routes/game";
 
 interface Game {
     id: number;
     name: string;
     slug: string;
-    image: string|null;
+    image: string | null;
 }
 
 interface Props {
     games: Game[];
 }
 
-export default function GamesIndex({ games }: Props){
+export default function GamesIndex({ games }: Props) {
     return (
-        <AppLayout>
+        <>
             <Head title="Top Up Game" />
 
             <div className="p-6">
@@ -28,11 +27,11 @@ export default function GamesIndex({ games }: Props){
                     {games.map((game) => (
                         <Link
                             key={game.id}
-                            href={route('games.show', game.slug)}
+                            href={GameShow(game.slug)}
                             className="group border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-primary hover:shadow-md transition-all"
                         >
                             {game.image ? (
-                                <img 
+                                <img
                                     src={`/storage/${game.image}`}
                                     alt={game.name}
                                     className="w-20 h-20 object-cover rounded-lg"
@@ -49,6 +48,6 @@ export default function GamesIndex({ games }: Props){
                     ))}
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

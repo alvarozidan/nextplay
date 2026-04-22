@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import { show as Ordershow } from "@/routes/orders";
 
 interface Order {
     id: number;
@@ -33,12 +34,12 @@ export default function OrderShow({ order }: { order: Order }) {
         }).format(price);
 
     return (
-        <AppLayout>
+        <>
             <Head title={`Order #${order.id}`} />
 
             <div className="p-6 max-w-lg mx-auto">
                 <div className="mb-6">
-                    <Link href={route('orders.index')} className="text-muted-foreground hover:text-primary text-sm">
+                    <Link href={Ordershow(order.id)} className="text-muted-foreground hover:text-primary text-sm">
                         ← Riwayat Transaksi
                     </Link>
                 </div>
@@ -84,6 +85,6 @@ export default function OrderShow({ order }: { order: Order }) {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

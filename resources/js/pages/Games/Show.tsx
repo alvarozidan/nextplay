@@ -32,7 +32,7 @@ export default function GameShow({ game }: Props){
         }).format(price);
 
     return (
-    <AppLayout>
+    <>
         <Head title={`Top Up ${game.name}`} />
 
         <div className="p-6">
@@ -73,6 +73,6 @@ export default function GameShow({ game }: Props){
                 </div>
             )}
         </div>
-    </AppLayout>
+    </>
 );
 }
