@@ -20,11 +20,12 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        
+        $validate = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'game-user_id' => 'required|string',
+            'game_user_id' => 'required|string',
             'payment_method' => 'required|string',
-        ]);
+            ]);
 
         $product = Product::findOrFail($request->product_id);
 
@@ -44,5 +45,6 @@ class CheckoutController extends Controller
 
         return redirect()->route('orders.show', $order)
                 ->with('success', 'Order berhasil dibuat!');
+        // return redirect('/orders');
     }
 }

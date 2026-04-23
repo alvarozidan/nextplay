@@ -66,7 +66,7 @@ function OrderRow({ order }: {order: Order }){
 
 export default function AdminOrdersIndex({ orders }: { orders: Order[] }) {
     return (
-        <AppLayout>
+        <>
             <Head title="Kelola Order" />
             <div className="p-6">
                 <h1 className="text-2xl font-semibold mb-6">Kelola Order</h1>
@@ -74,6 +74,6 @@ export default function AdminOrdersIndex({ orders }: { orders: Order[] }) {
                     {orders.map(order => <OrderRow key={order.id} order={order} />)}
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

@@ -19,7 +19,7 @@ class DashboardController extends Controller
                 'total_revenue' => Order::where('status', 'completed')->sum('total_price'),
                 'total_users' => User::where('role', 'user')->count(),
             ],
-            'recent_orders' => Order::with(['user', 'item.product.game'])
+            'recent_orders' => Order::with(['user', 'items.product.game'])
             ->latest()
             ->take(5)
             ->get(), 

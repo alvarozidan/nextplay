@@ -23,10 +23,12 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+         
+
         $request->validate([
-            'game_id' => 'required|exist:games.id',
+            'game_id' => 'required|integer',
             'name' => 'required|string',
-            'diamong_amount' => 'required|integer|min:1',
+            'diamond_amount' => 'required|integer|min:1',
             'price' => 'required|numeric|min:0',
         ]);
 

@@ -22,7 +22,7 @@ interface Order {
 
 interface Props {
     stats: Stats;
-    recents_order: Order[];
+    recent_orders: Order[];
 }
 
 const statusColor: Record<string, string> = {
@@ -33,7 +33,7 @@ const statusColor: Record<string, string> = {
     failed: 'bg-red-100 text-red-800',
 };
 
-export default function AdminDashboard({ stats, recents_order}: Props)
+export default function AdminDashboard({ stats, recent_orders}: Props)
 {
     const formatPrice = (price: number) =>
         new Intl.NumberFormat('id-ID', {
@@ -43,7 +43,7 @@ export default function AdminDashboard({ stats, recents_order}: Props)
         }).format(price);
 
     return (
-         <AppLayout>
+         <>
             <Head title="Admin Dashboard" />
 
             <div className="p-6 space-y-6">
@@ -81,7 +81,7 @@ export default function AdminDashboard({ stats, recents_order}: Props)
                 <div>
                     <h2 className="text-lg font-medium mb-3">Order Terbaru</h2>
                     <div className="border rounded-xl divide-y">
-                        {recents_order.map((order) => (
+                        {recent_orders.map((order) => (
                             <div key={order.id} className="p-4 flex items-center justify-between">
                                 <div>
                                     <p className="font-medium text-sm">{order.user.name}</p>
@@ -100,6 +100,6 @@ export default function AdminDashboard({ stats, recents_order}: Props)
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

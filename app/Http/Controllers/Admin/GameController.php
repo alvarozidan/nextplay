@@ -11,7 +11,7 @@ class GameController extends Controller
 {
     public function index()
     {
-        $games = Game::withCount('product')->latest()->get();
+        $games = Game::withCount('products')->latest()->get();
 
         return Inertia::render('Admin/Games/Index', [
             'games' => $games,
@@ -23,9 +23,16 @@ class GameController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|unique:game,slug',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        Game::creat($request->only(['name', 'slug']));
+        $data = $request->only('name', 'slug');
+
+        if ($request->hasFile('image')){
+            $data['image'] = $request->file('image')->store('games', 'public');
+        }
+
+        Game::create($data);
 
         return back()->with('success', 'Game berhasil ditambahkan');
     }

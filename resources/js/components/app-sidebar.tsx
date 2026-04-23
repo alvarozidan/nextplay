@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard,  Package } from 'lucide-react';
 import { BookOpen, FolderGit2, Gamepad2, ClipboardList } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -51,12 +51,12 @@ export function AppSidebar() {
     const isAdmin = auth?.user?.role === 'admin';
 
     const adminNavItems: NavItem[] = isAdmin? [
-        {
-            title: 'Admin Dashboard',
-            href: '/admin',
-            icon: ShieldCheck,
-        },
+        { title: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard,},
+        { title: 'Kelola Game', href: '/admin/games', icon: Gamepad2,},
+        { title: 'Kelola Produk', href: '/admin/products', icon: Package,},
+        { title: 'Kelola Order', href: '/admin/orders', icon: ClipboardList,},
     ] : [];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -73,6 +73,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                {isAdmin && <NavMain items={adminNavItems}/>}
             </SidebarContent>
 
             <SidebarFooter>
