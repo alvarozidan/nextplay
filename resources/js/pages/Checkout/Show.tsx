@@ -1,7 +1,5 @@
 import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { show as GameShow } from '@/routes/game';
-
 
 interface Product {
     id: number;
@@ -13,13 +11,21 @@ interface Product {
 
 interface Props {
     product: Product;
+    client_key: string;
 }
 
-export default function CheckoutShow({ product }: Props) {
-    const { data, setData, post, processing, errors } = useForm({
+declare global {
+    interface Window {
+        snap: {
+            pay: (token: string, options: object) => void;
+        };
+    }
+}
+
+export default function CheckoutShow({ product, client_key }: Props) {
+    const { data, setData,  processing, errors } = useForm({
         product_id: product.id,
         game_user_id: '',
-        payment_method: 'transfer',
     });
 
     const formatPrice = (price: number) =>
@@ -29,13 +35,66 @@ export default function CheckoutShow({ product }: Props) {
             minimumFractionDigits: 0,
         }).format(price);
 
-    function handleSubmit(e: React.FormEvent) {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        post('/checkout');
+
+        if(!data.game_user_id) return;
+
+        try{
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        //Minta Snap token ke Laravel
+        const res = await fetch('/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            body: JSON.stringify({
+                product_id:     data.product_id,
+                game_user_id:   data.game_user_id,
+            }),
+        });
+
+        const { snap_token, order_id } = await res.json();
+
+        //Buka popup Midtrans
+        window.snap.pay(snap_token, {
+            onSucces: async (result: any) => {
+                await fetch(`/orders/${order_id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                    body: JSON.stringify({ status: 'paid' }),
+                });
+                window.location.href = '/orders';
+            },
+            onPending: () => {
+                window.location.href = '/orders';
+            },
+            onError: () => {
+                window.location.href = '/orders';
+            },
+            onClose: () => {
+                alert('Pembayaran dibatalkan');
+            },
+        });
+        }catch(error){
+            console.error('Checkout Error: ', error);
+            alert('Terjadi keasalahan, coba lagi');
+        }
+        
     }
 
     return (
         <>
+            {/* Load Midtrans Snap JS */}
+            <script 
+                src="https://app.sandbox.midtrans.com/snap/snap.js"
+                data-client-key= {client_key}
+            />
+
             <Head title="Checkout" />
 
             <div className="p-6 max-w-lg mx-auto">
@@ -78,33 +137,9 @@ export default function CheckoutShow({ product }: Props) {
                         )}
                     </div>
 
-                    {/* Metode Pembayaran */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            Metode Pembayaran
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {['transfer', 'qris', 'ewallet'].map((method) => (
-                                <button
-                                    key={method}
-                                    type="button"
-                                    onClick={() => setData('payment_method', method)}
-                                    className={`border rounded-lg py-2 text-sm capitalize transition-all ${
-                                        data.payment_method === method
-                                            ? 'border-primary bg-primary/10 text-primary font-medium'
-                                            : 'hover:border-primary/50'
-                                    }`}
-                                >
-                                    {method === 'transfer' ? 'Transfer Bank' :
-                                     method === 'qris' ? 'QRIS' : 'E-Wallet'}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
                     <button
                         type="submit"
-                        disabled={processing}
+                        disabled={processing || !data.game_user_id}
                         className="w-full bg-primary text-primary-foreground rounded-lg py-3 font-semibold hover:opacity-90 transition disabled:opacity-50"
                     >
                         {processing ? 'Memproses...' : `Bayar ${formatPrice(product.price)}`}
