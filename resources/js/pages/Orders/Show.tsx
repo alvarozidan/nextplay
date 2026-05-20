@@ -1,6 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { show as Ordershow } from "@/routes/orders";
+import PublicLayout from '@/layouts/public-layout';
 
 interface Order {
     id: number;
@@ -34,12 +33,12 @@ export default function OrderShow({ order }: { order: Order }) {
         }).format(price);
 
     return (
-        <>
+        <PublicLayout>
             <Head title={`Order #${order.id}`} />
 
-            <div className="p-6 max-w-lg mx-auto">
+            <div className="max-w-lg mx-auto">
                 <div className="mb-6">
-                    <Link href={Ordershow(order.id)} className="text-muted-foreground hover:text-primary text-sm">
+                    <Link href="/orders" className="text-muted-foreground hover:text-primary text-sm">
                         ← Riwayat Transaksi
                     </Link>
                 </div>
@@ -54,7 +53,7 @@ export default function OrderShow({ order }: { order: Order }) {
                 <div className="border rounded-xl divide-y">
                     <div className="p-4">
                         <p className="text-xs text-muted-foreground mb-1">Produk</p>
-                        {order.items.map(item => (
+                        {order.items.map((item) => (
                             <div key={item.id}>
                                 <p className="font-medium">{item.product.name}</p>
                                 <p className="text-sm text-muted-foreground">
@@ -75,7 +74,8 @@ export default function OrderShow({ order }: { order: Order }) {
                         <p className="text-xs text-muted-foreground mb-1">Tanggal</p>
                         <p className="font-medium">
                             {new Date(order.created_at).toLocaleDateString('id-ID', {
-                                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                day: 'numeric', month: 'long', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit',
                             })}
                         </p>
                     </div>
@@ -85,6 +85,6 @@ export default function OrderShow({ order }: { order: Order }) {
                     </div>
                 </div>
             </div>
-        </>
+        </PublicLayout>
     );
 }

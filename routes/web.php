@@ -43,5 +43,9 @@ Route::post('/midtrans/callback', [MidtransController::class, 'handleNotificatio
     ->name('midtrans.callback')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
+    use App\Http\Controllers\NewsController;
+
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+
 
 require __DIR__.'/settings.php';

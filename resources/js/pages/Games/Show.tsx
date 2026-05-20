@@ -1,8 +1,6 @@
-import { Head, Link } from "@inertiajs/react";
-import AppLayout from "@/layouts/app-layout";
-import { home } from "@/routes";
+import { Head, Link } from '@inertiajs/react';
+import PublicLayout from '@/layouts/public-layout';
 import { show as checkoutShow } from '@/routes/checkout';
-
 
 interface Product {
     id: number;
@@ -19,12 +17,8 @@ interface Game {
     products: Product[];
 }
 
-interface Props {
-    game: Game;
-}
-
-export default function GameShow({ game }: Props){
-    const formatPrice = (price:number) =>
+export default function GameShow({ game }: { game: Game }) {
+    const formatPrice = (price: number) =>
         new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
@@ -32,19 +26,20 @@ export default function GameShow({ game }: Props){
         }).format(price);
 
     return (
-    <>
-        <Head title={`Top Up ${game.name}`} />
+        <PublicLayout>
+            <Head title={`Top Up ${game.name}`} />
 
-        <div className="p-6">
-
-            <Link href={home()} className="text-muted-foreground hover:text-primary text-sm">
+            <Link href="/" className="text-muted-foreground hover:text-primary text-sm">
                 ← Kembali
             </Link>
 
-
             <div className="flex items-center gap-4 my-6">
                 {game.image ? (
-                    <img src={`/storage/${game.image}`} alt={game.name} className="w-16 h-16 rounded-xl object-cover"/>
+                    <img
+                        src={`/storage/${game.image}`}
+                        alt={game.name}
+                        className="w-16 h-16 rounded-xl object-cover"
+                    />
                 ) : (
                     <div className="w-16 h-16 bg-muted rounded-xl flex items-center justify-center text-2xl">🎮</div>
                 )}
@@ -72,7 +67,6 @@ export default function GameShow({ game }: Props){
                     ))}
                 </div>
             )}
-        </div>
-    </>
-);
+        </PublicLayout>
+    );
 }

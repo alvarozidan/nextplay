@@ -1,6 +1,7 @@
-import { Head, router, useForm } from "@inertiajs/react";
-import { useState } from "react";
-import { index as adminGames, store as adminGamesStore, destroy as adminGamesDestory, update as adminGamesUpdate } from '@/routes/admin/games';
+import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import PublicLayout from '@/layouts/public-layout';
+import { store as adminGamesStore, destroy as adminGamesDestroy, update as adminGamesUpdate } from '@/routes/admin/games';
 
 interface Game {
     id: number;
@@ -10,46 +11,32 @@ interface Game {
     products_count: number;
 }
 
-interface Props {
-    games: Game[];
-}
-
-export default function AdminGameIndex({ games }: Props)
-{
-    const [showForm, setShowForm ] = useState(false);
-
+export default function AdminGameIndex({ games }: { games: Game[] }) {
+    const [showForm, setShowForm] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         slug: '',
         image: null as File | null,
     });
 
-    function handleSubmit(e: React.FormEvent){
+    function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(adminGamesStore.url(), {
-            onSuccess: () => { reset(); setShowForm(false);}
-        });
+        post(adminGamesStore.url(), { onSuccess: () => { reset(); setShowForm(false); } });
     }
 
-    function handleDelete(id: number){
-        if(confirm('Yakin ingin menghapus game ini?')){
-            router.delete(adminGamesDestory.url(id));
-        }
+    function handleDelete(id: number) {
+        if (confirm('Yakin ingin menghapus game ini?')) router.delete(adminGamesDestroy.url(id));
     }
 
-    function handleToggleActive(game: Game){
-        router.put(adminGamesUpdate.url(game.id), {
-            name: game.name,
-            is_active: !game.is_active,
-        });
+    function handleToggleActive(game: Game) {
+        router.put(adminGamesUpdate.url(game.id), { name: game.name, is_active: !game.is_active });
     }
 
     return (
-       <>
+        <PublicLayout>
             <Head title="Kelola Game" />
-
-            <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">Kelola Game</h1>
                     <button
                         onClick={() => setShowForm(!showForm)}
@@ -60,16 +47,13 @@ export default function AdminGameIndex({ games }: Props)
                 </div>
 
                 {showForm && (
-                    <form onSubmit={handleSubmit} className="border rounded-xl p-4 mb-6 space-y-3">
+                    <form onSubmit={handleSubmit} className="border rounded-xl p-4 space-y-3">
                         <div>
                             <label className="block text-sm font-medium mb-1">Nama Game</label>
                             <input
                                 type="text"
                                 value={data.name}
-                                onChange={e => {
-                                    setData('name', e.target.value);
-                                    setData('slug', e.target.value.toLowerCase().replace(/\s+/g, '-'));
-                                }}
+                                onChange={e => { setData('name', e.target.value); setData('slug', e.target.value.toLowerCase().replace(/\s+/g, '-')); }}
                                 placeholder="contoh: Mobile Legends"
                                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                             />
@@ -88,7 +72,7 @@ export default function AdminGameIndex({ games }: Props)
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Gambar Game</label>
-                            <input 
+                            <input
                                 type="file"
                                 accept="image/*"
                                 onChange={e => setData('image', e.target.files?.[0] ?? null)}
@@ -113,18 +97,12 @@ export default function AdminGameIndex({ games }: Props)
                             <div key={game.id} className="p-4 flex items-center justify-between">
                                 <div>
                                     <p className="font-medium">{game.name}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {game.slug} · {game.products_count} produk
-                                    </p>
+                                    <p className="text-xs text-muted-foreground">{game.slug} · {game.products_count} produk</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => handleToggleActive(game)}
-                                        className={`text-xs px-3 py-1 rounded-full font-medium transition ${
-                                            game.is_active
-                                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                        }`}
+                                        className={`text-xs px-3 py-1 rounded-full font-medium transition ${game.is_active ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                                     >
                                         {game.is_active ? 'Aktif' : 'Nonaktif'}
                                     </button>
@@ -140,6 +118,6 @@ export default function AdminGameIndex({ games }: Props)
                     )}
                 </div>
             </div>
-        </>
+        </PublicLayout>
     );
 }

@@ -4,6 +4,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
+import PublicLayout from '@/layouts/public-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -18,8 +19,15 @@ createInertiaApp({
                 return AuthLayout;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
+            // ✅ Halaman publik — pakai PublicLayout (navbar, no sidebar)
+            case name.startsWith('Games/'):
+            case name.startsWith('Orders/'):
+            case name.startsWith('Checkout/'):
+                case name.startsWith('News/'):
+                    case name.startsWith('Admin/'):
+                return null; // layout sudah di-handle di dalam komponen masing-masing
             default:
-                return AppLayout;
+                return AppLayout; // Admin & dashboard tetap pakai sidebar
         }
     },
     strictMode: true,
@@ -36,5 +44,4 @@ createInertiaApp({
     },
 });
 
-// This will set light / dark mode on load...
 initializeTheme();

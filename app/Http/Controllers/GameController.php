@@ -10,7 +10,7 @@ class GameController extends Controller
 {
     public function index()
     {
-        $games = Game::where('is_active', true)->get();
+        $games = Game::all();
 
         return Inertia::render('Games/Index', [
             'games' => $games,

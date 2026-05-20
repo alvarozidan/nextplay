@@ -1,5 +1,6 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
+import PublicLayout from '@/layouts/public-layout';
 import { store as adminProductsStore, destroy as adminProductsDestroy } from '@/routes/admin/products';
 
 interface Product {
@@ -11,52 +12,31 @@ interface Product {
     game: { id: number; name: string };
 }
 
-interface Game {
-    id: number;
-    name: string;
-}
+interface Game { id: number; name: string; }
 
-interface Props {
-    products: Product[];
-    games: Game[];
-}
-
-export default function AdminProductsIndex({ products, games }: Props) {
+export default function AdminProductsIndex({ products, games }: { products: Product[]; games: Game[] }) {
     const [showForm, setShowForm] = useState(false);
-
     const { data, setData, post, processing, errors, reset } = useForm({
-        game_id: '',
-        name: '',
-        diamond_amount: '',
-        price: '',
+        game_id: '', name: '', diamond_amount: '', price: '',
     });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(adminProductsStore.url(), {
-            onSuccess: () => { reset(); setShowForm(false); }
-        });
+        post(adminProductsStore.url(), { onSuccess: () => { reset(); setShowForm(false); } });
     }
 
     function handleDelete(id: number) {
-        if (confirm('Yakin ingin menghapus produk ini?')) {
-            router.delete(adminProductsDestroy.url(id));
-        }
+        if (confirm('Yakin ingin menghapus produk ini?')) router.delete(adminProductsDestroy.url(id));
     }
 
     const formatPrice = (price: number) =>
-        new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(price);
+        new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 
     return (
-        <>
+        <PublicLayout>
             <Head title="Kelola Produk" />
-
-            <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">Kelola Produk</h1>
                     <button
                         onClick={() => setShowForm(!showForm)}
@@ -66,9 +46,8 @@ export default function AdminProductsIndex({ products, games }: Props) {
                     </button>
                 </div>
 
-                {/* Form tambah produk */}
                 {showForm && (
-                    <form onSubmit={handleSubmit} className="border rounded-xl p-4 mb-6 space-y-3">
+                    <form onSubmit={handleSubmit} className="border rounded-xl p-4 space-y-3">
                         <div>
                             <label className="block text-sm font-medium mb-1">Game</label>
                             <select
@@ -77,9 +56,7 @@ export default function AdminProductsIndex({ products, games }: Props) {
                                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                             >
                                 <option value="">Pilih Game</option>
-                                {games.map(game => (
-                                    <option key={game.id} value={game.id}>{game.name}</option>
-                                ))}
+                                {games.map(game => <option key={game.id} value={game.id}>{game.name}</option>)}
                             </select>
                             {errors.game_id && <p className="text-destructive text-xs mt-1">{errors.game_id}</p>}
                         </div>
@@ -128,7 +105,6 @@ export default function AdminProductsIndex({ products, games }: Props) {
                     </form>
                 )}
 
-                {/* Tabel produk */}
                 <div className="border rounded-xl divide-y">
                     {products.length === 0 ? (
                         <p className="p-4 text-muted-foreground text-sm">Belum ada produk.</p>
@@ -137,12 +113,8 @@ export default function AdminProductsIndex({ products, games }: Props) {
                             <div key={product.id} className="p-4 flex items-center justify-between">
                                 <div>
                                     <p className="font-medium">{product.name}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {product.game.name} · {product.diamond_amount} diamonds
-                                    </p>
-                                    <p className="text-sm font-semibold text-primary mt-0.5">
-                                        {formatPrice(product.price)}
-                                    </p>
+                                    <p className="text-xs text-muted-foreground">{product.game.name} · {product.diamond_amount} diamonds</p>
+                                    <p className="text-sm font-semibold text-primary mt-0.5">{formatPrice(product.price)}</p>
                                 </div>
                                 <button
                                     onClick={() => handleDelete(product.id)}
@@ -155,6 +127,6 @@ export default function AdminProductsIndex({ products, games }: Props) {
                     )}
                 </div>
             </div>
-        </>
+        </PublicLayout>
     );
 }

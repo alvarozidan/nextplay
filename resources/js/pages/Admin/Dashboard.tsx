@@ -1,8 +1,8 @@
-import { Head, Link } from "@inertiajs/react";
-import AppLayout from "@/layouts/app-layout";
-import { index as adminGames} from '@/routes/admin/games';
-import { index as adminOrders} from '@/routes/admin/orders';
-import { index as adminProducts} from '@/routes/admin/products';
+import { Head, Link } from '@inertiajs/react';
+import PublicLayout from '@/layouts/public-layout';
+import { index as adminGames } from '@/routes/admin/games';
+import { index as adminOrders } from '@/routes/admin/orders';
+import { index as adminProducts } from '@/routes/admin/products';
 
 interface Stats {
     total_games: number;
@@ -15,41 +15,29 @@ interface Order {
     id: number;
     status: string;
     total_price: number;
-    user: { name: string};
-    items: { product: { name: string ; game: { name: string }}}[];
+    user: { name: string };
+    items: { product: { name: string; game: { name: string } } }[];
     created_at: string;
 }
 
-interface Props {
-    stats: Stats;
-    recent_orders: Order[];
-}
-
 const statusColor: Record<string, string> = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    paid: 'bg-blue-100 text-blue-800',
+    pending:    'bg-yellow-100 text-yellow-800',
+    paid:       'bg-blue-100 text-blue-800',
     processing: 'bg-purple-100 text-purple-800',
-    completed: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800',
+    completed:  'bg-green-100 text-green-800',
+    failed:     'bg-red-100 text-red-800',
 };
 
-export default function AdminDashboard({ stats, recent_orders}: Props)
-{
+export default function AdminDashboard({ stats, recent_orders }: { stats: Stats; recent_orders: Order[] }) {
     const formatPrice = (price: number) =>
-        new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(price);
+        new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 
     return (
-         <>
+        <PublicLayout>
             <Head title="Admin Dashboard" />
-
-            <div className="p-6 space-y-6">
+            <div className="space-y-6">
                 <h1 className="text-2xl font-semibold">Dashboard Admin</h1>
 
-                {/* Stats cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                         { label: 'Total Game', value: stats.total_games },
@@ -64,20 +52,12 @@ export default function AdminDashboard({ stats, recent_orders}: Props)
                     ))}
                 </div>
 
-                {/* Quick links */}
                 <div className="flex gap-3">
-                    <Link href={adminGames()} className="border rounded-lg px-4 py-2 text-sm hover:border-primary transition-all">
-                        Kelola Game
-                    </Link>
-                    <Link href={adminProducts()} className="border rounded-lg px-4 py-2 text-sm hover:border-primary transition-all">
-                        Kelola Produk
-                    </Link>
-                    <Link href={adminOrders()} className="border rounded-lg px-4 py-2 text-sm hover:border-primary transition-all">
-                        Kelola Order
-                    </Link>
+                    <Link href={adminGames()} className="border rounded-lg px-4 py-2 text-sm hover:border-primary transition-all">Kelola Game</Link>
+                    <Link href={adminProducts()} className="border rounded-lg px-4 py-2 text-sm hover:border-primary transition-all">Kelola Produk</Link>
+                    <Link href={adminOrders()} className="border rounded-lg px-4 py-2 text-sm hover:border-primary transition-all">Kelola Order</Link>
                 </div>
 
-                {/* Recent orders */}
                 <div>
                     <h2 className="text-lg font-medium mb-3">Order Terbaru</h2>
                     <div className="border rounded-xl divide-y">
@@ -100,6 +80,6 @@ export default function AdminDashboard({ stats, recent_orders}: Props)
                     </div>
                 </div>
             </div>
-        </>
+        </PublicLayout>
     );
 }
