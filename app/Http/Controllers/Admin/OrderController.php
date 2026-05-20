@@ -23,7 +23,7 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|in:pending, paid, processing, completed, failed',
+            'status' => 'required|in:pending,paid,processing,completed,failed',
         ]);
 
         $order->update(['status' => $request->status]);

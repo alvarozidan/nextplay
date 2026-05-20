@@ -57,7 +57,7 @@ class CheckoutController extends Controller
 
         //Generate Snap Token
         $params = [
-            'transaction_detail' => [
+            'transaction_details' => [
                 'order_id'           => 'ORDER-' . $order->id,
                 'gross_amount'       => (int) $product->price,
             ],

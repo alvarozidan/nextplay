@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { show as GameShow } from '@/routes/game';
 
@@ -35,11 +36,28 @@ export default function CheckoutShow({ product, client_key }: Props) {
             minimumFractionDigits: 0,
         }).format(price);
 
+    const [snapReady, setSnapReady] = useState(false);
+
+    useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+    script.setAttribute('data-client-key', client_key);
+    script.onload = () => setSnapReady(true);
+    document.body.appendChild(script);
+
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, [client_key]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if(!data.game_user_id) return;
 
+         if (!snapReady || !window.snap) {
+        alert('Payment gateway belum siap, coba lagi sebentar.');
+        return;
+        }
         try{
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         //Minta Snap token ke Laravel
@@ -89,12 +107,6 @@ export default function CheckoutShow({ product, client_key }: Props) {
 
     return (
         <>
-            {/* Load Midtrans Snap JS */}
-            <script 
-                src="https://app.sandbox.midtrans.com/snap/snap.js"
-                data-client-key= {client_key}
-            />
-
             <Head title="Checkout" />
 
             <div className="p-6 max-w-lg mx-auto">
@@ -139,10 +151,10 @@ export default function CheckoutShow({ product, client_key }: Props) {
 
                     <button
                         type="submit"
-                        disabled={processing || !data.game_user_id}
+                        disabled={processing || !data.game_user_id || !snapReady}
                         className="w-full bg-primary text-primary-foreground rounded-lg py-3 font-semibold hover:opacity-90 transition disabled:opacity-50"
                     >
-                        {processing ? 'Memproses...' : `Bayar ${formatPrice(product.price)}`}
+                        {!snapReady ? 'Memuat...' : processing ? 'Memproses...' : `Bayar ${formatPrice(product.price)}`}
                     </button>
                 </form>
             </div>
