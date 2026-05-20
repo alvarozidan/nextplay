@@ -6,6 +6,7 @@ use App\Http\Controllers\GameController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\MidtransController;
 
 Route::get('/', [GameController::class, 'index'])->name('home');
 Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('game.show');
@@ -24,17 +25,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/games', [Admin\GameController::class, 'index'])->name('games.index');
     Route::post('/games', [Admin\GameController::class, 'store'])->name('games.store');
-    Route::put('/games{game}', [Admin\GameController::class, 'update'])->name('games.update');
+    Route::put('/games/{game}', [Admin\GameController::class, 'update'])->name('games.update');
     Route::delete('/games/{game}', [Admin\GameController::class, 'destroy'])->name('games.destroy');
 
     Route::get('/products', [Admin\ProductController::class, 'index'])->name('products.index');
     Route::post('/products', [Admin\ProductController::class, 'store'])->name('products.store');
-    Route::put('/products{product}', [Admin\ProductController::class, 'update'])->name('products.update');
+    Route::put('/products/{product}', [Admin\ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [Admin\ProductController::class, 'destroy'])->name('products.destroy');
     
     Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
-    Route::put('/orders{order}', [Admin\OrderController::class, 'update'])->name('orders.update');
+    Route::put('/orders/{order}', [Admin\OrderController::class, 'update'])->name('orders.update');
 });
+
+// Di luar middleware 'auth' — Midtrans tidak login!
+// Di luar middleware CSRF — request dari server Midtrans, bukan browser
+Route::post('/midtrans/callback', [MidtransController::class, 'handleNotification'])
+    ->name('midtrans.callback')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 
 require __DIR__.'/settings.php';

@@ -77,6 +77,9 @@ class CheckoutController extends Controller
 
         $snapToken = Snap::getSnapToken($params);
 
+        //Simpan snap token ke order
+        $order->update(['snap_token' => $snapToken]);
+
         return response()->json([
             'snap_token' => $snapToken,
             'order_id'   => $order->id,

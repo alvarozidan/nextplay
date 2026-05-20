@@ -47,7 +47,7 @@ export default function CheckoutShow({ product, client_key }: Props) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'X-CSRF-TOKEN': csrfToken,
             },
             body: JSON.stringify({
                 product_id:     data.product_id,
@@ -59,7 +59,7 @@ export default function CheckoutShow({ product, client_key }: Props) {
 
         //Buka popup Midtrans
         window.snap.pay(snap_token, {
-            onSucces: async (result: any) => {
+            onSuccess: async (result: any) => {
                 await fetch(`/orders/${order_id}/status`, {
                     method: 'PATCH',
                     headers: {
