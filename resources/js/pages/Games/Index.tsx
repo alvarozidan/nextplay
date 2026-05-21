@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Zap, Shield, Globe } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 
 interface Game {
@@ -15,6 +15,186 @@ interface Props {
     games: Game[];
 }
 
+// Slide data — ganti src dengan URL banner asli kamu, atau simpan di public/banners/
+const SLIDES = [
+    {
+        id: 1,
+        title: 'Mobile Legends',
+        subtitle: 'Top Up Diamond ML sekarang, proses 1 menit!',
+        badge: '🔥 Terlaris',
+        gradient: 'from-blue-900 via-blue-700 to-cyan-500',
+        accent: '#38bdf8',
+        emoji: '⚔️',
+        slug: 'mobile-legends',
+    },
+    {
+        id: 2,
+        title: 'Free Fire',
+        subtitle: 'Diamond & Bundle eksklusif tersedia setiap hari',
+        badge: '⚡ Promo',
+        gradient: 'from-orange-900 via-orange-700 to-yellow-500',
+        accent: '#fbbf24',
+        emoji: '🔥',
+        slug: 'free-fire',
+    },
+    {
+        id: 3,
+        title: 'Genshin Impact',
+        subtitle: 'Genesis Crystal & Primogem — harga terbaik',
+        badge: '✨ Baru',
+        gradient: 'from-violet-900 via-purple-700 to-indigo-500',
+        accent: '#a78bfa',
+        emoji: '🌟',
+        slug: 'genshin-impact',
+    },
+];
+
+const TRUST_BADGES = [
+    { icon: <Zap className="w-4 h-4" />, label: 'Proses 1–60 Detik' },
+    { icon: <Shield className="w-4 h-4" />, label: 'Transaksi Aman' },
+    { icon: <Globe className="w-4 h-4" />, label: 'Indonesia & Global' },
+];
+
+function HeroBanner({ games }: { games: Game[] }) {
+    const [current, setCurrent] = useState(0);
+    const [isAnimating, setIsAnimating] = useState(false);
+
+    const goTo = useCallback((idx: number) => {
+        if (isAnimating) return;
+        setIsAnimating(true);
+        setCurrent(idx);
+        setTimeout(() => setIsAnimating(false), 400);
+    }, [isAnimating]);
+
+    const prev = () => goTo((current - 1 + SLIDES.length) % SLIDES.length);
+    const next = useCallback(() => goTo((current + 1) % SLIDES.length), [current, goTo]);
+
+    useEffect(() => {
+        const timer = setInterval(next, 4500);
+        return () => clearInterval(timer);
+    }, [next]);
+
+    const slide = SLIDES[current];
+
+    // Cari game yang sesuai slug slide
+    const slideGame = games.find(g => g.slug === slide.slug);
+    const gameHref = slideGame ? `/games/${slideGame.slug}` : '/';
+
+    return (
+        <div className="relative w-full rounded-2xl overflow-hidden mb-8 select-none" style={{ height: '260px' }}>
+            {/* Background gradient */}
+            <div
+                className={`absolute inset-0 bg-gradient-to-r ${slide.gradient} transition-all duration-500`}
+            />
+
+            {/* Decorative blobs */}
+            <div
+                className="absolute -top-10 -right-10 w-64 h-64 rounded-full opacity-20 blur-3xl transition-all duration-500"
+                style={{ background: slide.accent }}
+            />
+            <div
+                className="absolute -bottom-10 left-20 w-48 h-48 rounded-full opacity-15 blur-2xl transition-all duration-500"
+                style={{ background: slide.accent }}
+            />
+
+            {/* Dot pattern overlay */}
+            <div
+                className="absolute inset-0 opacity-5"
+                style={{
+                    backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                    backgroundSize: '24px 24px',
+                }}
+            />
+
+            {/* Content */}
+            <div className="relative z-10 h-full flex items-center px-8 md:px-12">
+                <div className="flex-1">
+                    <span
+                        className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full mb-3"
+                        style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)' }}
+                    >
+                        {slide.badge}
+                    </span>
+
+                    <div
+                        key={current}
+                        className="transition-all duration-400"
+                        style={{ animation: 'fadeSlideUp 0.4s ease forwards' }}
+                    >
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-2 leading-tight">
+                            Top Up {slide.title}
+                        </h2>
+                        <p className="text-white/70 text-sm md:text-base mb-5 max-w-xs">
+                            {slide.subtitle}
+                        </p>
+                    </div>
+
+                    <Link
+                        href={gameHref}
+                        className="inline-flex items-center gap-2 font-bold text-sm px-5 py-2.5 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
+                        style={{
+                            background: 'white',
+                            color: '#0f172a',
+                            boxShadow: `0 4px 20px ${slide.accent}60`,
+                        }}
+                    >
+                        Top Up Sekarang
+                        <ChevronRight className="w-4 h-4" />
+                    </Link>
+                </div>
+
+                {/* Big emoji */}
+                <div
+                    key={`emoji-${current}`}
+                    className="hidden md:flex items-center justify-center text-8xl lg:text-9xl opacity-40 flex-shrink-0 mr-8"
+                    style={{ animation: 'fadeSlideUp 0.5s ease forwards', filter: 'drop-shadow(0 0 40px rgba(255,255,255,0.3))' }}
+                >
+                    {slide.emoji}
+                </div>
+            </div>
+
+            {/* Prev / Next buttons */}
+            <button
+                onClick={prev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}
+            >
+                <ChevronLeft className="w-4 h-4 text-white" />
+            </button>
+            <button
+                onClick={next}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}
+            >
+                <ChevronRight className="w-4 h-4 text-white" />
+            </button>
+
+            {/* Dots */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                {SLIDES.map((_, i) => (
+                    <button
+                        key={i}
+                        onClick={() => goTo(i)}
+                        className="transition-all duration-300 rounded-full"
+                        style={{
+                            width: i === current ? '24px' : '8px',
+                            height: '8px',
+                            background: i === current ? 'white' : 'rgba(255,255,255,0.4)',
+                        }}
+                    />
+                ))}
+            </div>
+
+            <style>{`
+                @keyframes fadeSlideUp {
+                    from { opacity: 0; transform: translateY(12px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
+        </div>
+    );
+}
+
 export default function GamesIndex({ games }: Props) {
     const [query, setQuery] = useState('');
 
@@ -25,6 +205,22 @@ export default function GamesIndex({ games }: Props) {
     return (
         <PublicLayout>
             <Head title="Top Up Game — NextPlay" />
+
+            {/* Hero Banner */}
+            <HeroBanner games={games} />
+
+            {/* Trust Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+                {TRUST_BADGES.map((b) => (
+                    <div
+                        key={b.label}
+                        className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 border border-slate-100 px-4 py-2 rounded-full"
+                    >
+                        <span className="text-cyan-500">{b.icon}</span>
+                        {b.label}
+                    </div>
+                ))}
+            </div>
 
             {/* Search Bar */}
             <div className="relative mb-8">
@@ -42,6 +238,9 @@ export default function GamesIndex({ games }: Props) {
             <div className="mb-6 flex items-center gap-2">
                 <span className="text-lg">🎮</span>
                 <h2 className="text-lg font-semibold uppercase tracking-wide">Semua Game</h2>
+                <span className="ml-auto text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
+                    {filtered.length} game
+                </span>
             </div>
 
             {/* Game Grid */}

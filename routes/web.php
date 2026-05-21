@@ -18,6 +18,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function(){
@@ -35,6 +36,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
     Route::put('/orders/{order}', [Admin\OrderController::class, 'update'])->name('orders.update');
+    Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
 });
 
 // Di luar middleware 'auth' — Midtrans tidak login!

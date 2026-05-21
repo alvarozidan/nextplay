@@ -22,7 +22,6 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        //untuk memastikan hanya bisa melihat ordernya masing masing
         abort_if($order->user_id !== auth()->id(), 403);
 
         $order->load(['items.product.game']);
@@ -30,5 +29,15 @@ class OrderController extends Controller
         return Inertia::render('Orders/Show', [
             'order' => $order,
         ]);
+    }
+
+    public function destroy(Order $order)
+    {
+        abort_if($order->user_id !== auth()->id(), 403);
+
+        $order->items()->delete();
+        $order->delete();
+
+        return redirect()->route('orders.index')->with('success', 'Transaksi berhasil dihapus');
     }
 }

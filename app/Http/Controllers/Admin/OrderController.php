@@ -31,4 +31,11 @@ class OrderController extends Controller
         return back()->with('success', 'Status Order berhasil diubah');
     }
 
+    public function destroy(Order $order)
+    {
+        $order->items()->delete();
+        $order->delete();
+
+        return back()->with('success', 'Order berhasil dihapus');
+    }
 }

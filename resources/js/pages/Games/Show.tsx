@@ -34,15 +34,17 @@ const BADGES = [
 const STEPS = [
     'Masukkan ID akun game kamu',
     'Pilih nominal yang diinginkan',
+    'Klik tombol Pesan Sekarang',
     'Selesaikan pembayaran di popup',
     'Item masuk otomatis ke akunmu',
 ];
 
 export default function GameShow({ game, client_key }: { game: Game; client_key: string }) {
-    const [userId, setUserId]     = useState('');
-    const [server, setServer]     = useState('');
+    const [userId, setUserId]       = useState('');
+    const [server, setServer]       = useState('');
     const [snapReady, setSnapReady] = useState(false);
-    const [loadingId, setLoadingId] = useState<number | null>(null);
+    const [loading, setLoading]     = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const needsServer = game.slug.toLowerCase().includes('mobile-legend') ||
                         game.slug.toLowerCase().includes('mobilelegend');
@@ -69,7 +71,8 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
         document.body.appendChild(script);
     }, [client_key]);
 
-    const handleBuy = async (product: Product) => {
+    const handleOrder = async () => {
+        if (!selectedProduct) return;
         if (!canPay) {
             alert('Mohon isi ID akun game kamu terlebih dahulu.');
             return;
@@ -79,13 +82,13 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
             return;
         }
 
-        setLoadingId(product.id);
+        setLoading(true);
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             const res = await fetch('/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ product_id: product.id, game_user_id: gameUserId }),
+                body: JSON.stringify({ product_id: selectedProduct.id, game_user_id: gameUserId }),
             });
             const { snap_token, order_id } = await res.json();
 
@@ -101,13 +104,12 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                 },
                 onPending: () => { window.location.href = '/orders'; },
                 onError:   () => { window.location.href = '/orders'; },
-                onClose:   () => { setLoadingId(null); },
+                onClose:   () => { setLoading(false); },
             });
         } catch (err) {
             console.error(err);
             alert('Terjadi kesalahan, coba lagi.');
-        } finally {
-            setLoadingId(null);
+            setLoading(false);
         }
     };
 
@@ -253,24 +255,34 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
                                 {game.products.map((product) => {
-                                    const isLoading = loadingId === product.id;
+                                    const isSelected = selectedProduct?.id === product.id;
                                     return (
                                         <button
                                             key={product.id}
-                                            onClick={() => handleBuy(product)}
-                                            disabled={isLoading}
-                                            className="group relative rounded-xl p-4 border-2 border-slate-200 hover:border-cyan-400 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-left bg-white disabled:opacity-60 disabled:cursor-wait"
+                                            onClick={() => setSelectedProduct(isSelected ? null : product)}
+                                            className={`group relative rounded-xl p-4 border-2 transition-all duration-200 text-left bg-white
+                                                ${isSelected
+                                                    ? 'border-cyan-400 shadow-md ring-2 ring-cyan-200 -translate-y-0.5'
+                                                    : 'border-slate-200 hover:border-cyan-300 hover:shadow-md hover:-translate-y-0.5'
+                                                }`}
                                         >
+                                            {isSelected && (
+                                                <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center">
+                                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            )}
                                             <div className="text-2xl mb-2">💎</div>
-                                            <p className="font-semibold text-sm text-slate-800 leading-tight mb-0.5 group-hover:text-cyan-600 transition-colors">
+                                            <p className={`font-semibold text-sm leading-tight mb-0.5 transition-colors ${isSelected ? 'text-cyan-600' : 'text-slate-800 group-hover:text-cyan-600'}`}>
                                                 {product.name}
                                             </p>
                                             <p className="text-xs text-slate-400 mb-3">
                                                 {product.diamond_amount > 0 ? `${product.diamond_amount} diamond` : ''}
                                             </p>
-                                            <div className="inline-flex items-center text-xs font-bold text-white px-2.5 py-1 rounded-full"
+                                            <div className={`inline-flex items-center text-xs font-bold text-white px-2.5 py-1 rounded-full transition-all ${isSelected ? 'opacity-100' : ''}`}
                                                 style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>
-                                                {isLoading ? 'Memuat...' : formatPrice(product.price)}
+                                                {formatPrice(product.price)}
                                             </div>
                                         </button>
                                     );
@@ -278,6 +290,53 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                             </div>
                         )}
                     </div>
+
+                    {/* STEP 3 — Order Button (muncul setelah nominal dipilih) */}
+                    {selectedProduct && (
+                        <div className="bg-white border-2 border-cyan-200 rounded-2xl p-5 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>3</div>
+                                <h2 className="font-bold text-slate-800">Konfirmasi Pesanan</h2>
+                            </div>
+
+                            {/* Ringkasan */}
+                            <div className="bg-slate-50 rounded-xl p-4 mb-4 flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs text-slate-500 mb-0.5">Paket dipilih</p>
+                                    <p className="font-semibold text-slate-800 text-sm">{selectedProduct.name}</p>
+                                    {selectedProduct.diamond_amount > 0 && (
+                                        <p className="text-xs text-slate-400">{selectedProduct.diamond_amount} diamond</p>
+                                    )}
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs text-slate-500 mb-0.5">Total</p>
+                                    <p className="font-bold text-cyan-600 text-lg">{formatPrice(selectedProduct.price)}</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleOrder}
+                                disabled={loading || !canPay || !snapReady}
+                                className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 hover:shadow-lg active:scale-[0.98]"
+                                style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}
+                            >
+                                {!snapReady
+                                    ? '⏳ Memuat payment gateway...'
+                                    : !canPay
+                                    ? '⚠️ Isi ID akun game terlebih dahulu'
+                                    : loading
+                                    ? '⏳ Memproses...'
+                                    : `🛒 Pesan Sekarang — ${formatPrice(selectedProduct.price)}`}
+                            </button>
+
+                            {!canPay && (
+                                <p className="text-xs text-amber-600 text-center mt-2">
+                                    Kembali ke langkah 1 dan isi ID akun game kamu.
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </PublicLayout>
