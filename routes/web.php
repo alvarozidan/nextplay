@@ -1,15 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\MidtransController;
 
 Route::get('/', [GameController::class, 'index'])->name('home');
 Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('game.show');
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('/checkout/{product}', [CheckoutController::class, 'show'])->name('checkout.show');
@@ -21,7 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function(){
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/games', [Admin\GameController::class, 'index'])->name('games.index');
@@ -33,10 +34,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/products', [Admin\ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{product}', [Admin\ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [Admin\ProductController::class, 'destroy'])->name('products.destroy');
-    
+
     Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
     Route::put('/orders/{order}', [Admin\OrderController::class, 'update'])->name('orders.update');
     Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
+
+    Route::get('/news', [Admin\NewsController::class, 'index'])->name('news.index');
+    Route::post('/news', [Admin\NewsController::class, 'store'])->name('news.store');
+    Route::put('/news/{news}', [Admin\NewsController::class, 'update'])->name('news.update');
+    Route::delete('/news/{news}', [Admin\NewsController::class, 'destroy'])->name('news.destroy');
 });
 
 // Di luar middleware 'auth' — Midtrans tidak login!
@@ -44,10 +50,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::post('/midtrans/callback', [MidtransController::class, 'handleNotification'])
     ->name('midtrans.callback')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-
-    use App\Http\Controllers\NewsController;
-
-Route::get('/news', [NewsController::class, 'index'])->name('news.index');
-
 
 require __DIR__.'/settings.php';

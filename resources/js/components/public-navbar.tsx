@@ -22,6 +22,7 @@ const adminLinks = [
     { href: '/admin/games', label: 'Kelola Game', icon: Gamepad2 },
     { href: '/admin/products', label: 'Kelola Produk', icon: Package },
     { href: '/admin/orders', label: 'Kelola Order', icon: ClipboardList },
+    { href: '/admin/news', label: 'Kelola Berita', icon: Newspaper },
 ];
 
 const navLinks = [
