@@ -11,13 +11,21 @@ use Midtrans\Snap;
 
 class CheckoutController extends Controller
 {
+    // Mapping grup metode → kode Midtrans
+    const PAYMENT_METHODS = [
+        'bank_transfer'     => ['bca_va', 'bni_va', 'bri_va', 'cimb_va', 'permata_va', 'other_va'],
+        'ewallet'           => ['gopay', 'shopeepay', 'dana', 'ovo', 'linkaja'],
+        'convenience_store' => ['indomaret', 'alfamart'],
+        'qris'              => ['qris'],
+        'credit_card'       => ['credit_card'],
+    ];
 
     public function __construct()
     {
-        Config::$serverKey      = config('midtrans.server_key');
-        Config::$isProduction   = config('midtrans.is_production');
-        Config::$isSanitized    = config('midtrans.is_sanitized');
-        Config::$is3ds          = config('midtrans.is_3ds');
+        Config::$serverKey    = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized  = config('midtrans.is_sanitized');
+        Config::$is3ds        = config('midtrans.is_3ds');
     }
 
     public function show(Product $product)
@@ -25,18 +33,18 @@ class CheckoutController extends Controller
         $product->load('game');
 
         return Inertia::render('Checkout/Show', [
-            'product'       => $product,
-            'client_key'    => config('midtrans.client_key')
+            'product'    => $product,
+            'client_key' => config('midtrans.client_key'),
         ]);
     }
 
     public function store(Request $request)
     {
-        
         $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'game_user_id' => 'required|string',
-            ]);
+            'product_id'     => 'required|exists:products,id',
+            'game_user_id'   => 'required|string',
+            'payment_group'  => 'nullable|string|in:bank_transfer,ewallet,convenience_store,qris,credit_card',
+        ]);
 
         $product = Product::findOrFail($request->product_id);
         $user    = auth()->user();
@@ -46,7 +54,7 @@ class CheckoutController extends Controller
             'game_user_id'   => $request->game_user_id,
             'status'         => 'pending',
             'total_price'    => $product->price,
-            'payment_method' => 'midtrans',
+            'payment_method' => $request->payment_group ?? 'midtrans',
         ]);
 
         $order->items()->create([
@@ -55,11 +63,10 @@ class CheckoutController extends Controller
             'price'      => $product->price,
         ]);
 
-        //Generate Snap Token
         $params = [
             'transaction_details' => [
-                'order_id'           => 'ORDER-' . $order->id,
-                'gross_amount'       => (int) $product->price,
+                'order_id'     => 'ORDER-' . $order->id,
+                'gross_amount' => (int) $product->price,
             ],
             'customer_details' => [
                 'first_name' => $user->name,
@@ -67,17 +74,21 @@ class CheckoutController extends Controller
             ],
             'item_detail' => [
                 [
-                    'id'        => $product->id,
-                    'price'     => (int) $product->price,
-                    'quantity'  => 1,
-                    'name'      => $product->name,
+                    'id'       => $product->id,
+                    'price'    => (int) $product->price,
+                    'quantity' => 1,
+                    'name'     => $product->name,
                 ],
             ],
         ];
 
+        // Filter metode pembayaran di Snap sesuai pilihan user
+        if ($request->payment_group && isset(self::PAYMENT_METHODS[$request->payment_group])) {
+            $params['enabled_payments'] = self::PAYMENT_METHODS[$request->payment_group];
+        }
+
         $snapToken = Snap::getSnapToken($params);
 
-        //Simpan snap token ke order
         $order->update(['snap_token' => $snapToken]);
 
         return response()->json([

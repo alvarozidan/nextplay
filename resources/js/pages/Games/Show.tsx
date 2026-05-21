@@ -34,17 +34,74 @@ const BADGES = [
 const STEPS = [
     'Masukkan ID akun game kamu',
     'Pilih nominal yang diinginkan',
+    'Pilih metode pembayaran',
     'Klik tombol Pesan Sekarang',
-    'Selesaikan pembayaran di popup',
     'Item masuk otomatis ke akunmu',
 ];
 
+// Grup metode pembayaran
+const PAYMENT_GROUPS = [
+    {
+        key: 'bank_transfer',
+        label: 'Transfer Bank',
+        icon: '🏦',
+        desc: 'BCA, BNI, BRI, Mandiri, dll',
+        logos: ['BCA', 'BNI', 'BRI', 'Mandiri'],
+    },
+    {
+        key: 'ewallet',
+        label: 'E-Wallet',
+        icon: '📱',
+        desc: 'GoPay, ShopeePay, OVO, Dana',
+        logos: ['GoPay', 'ShopeePay', 'OVO', 'Dana'],
+    },
+    {
+        key: 'qris',
+        label: 'QRIS',
+        icon: '📷',
+        desc: 'Scan QR dari semua aplikasi',
+        logos: ['QRIS'],
+    },
+    {
+        key: 'convenience_store',
+        label: 'Minimarket',
+        icon: '🏪',
+        desc: 'Indomaret & Alfamart',
+        logos: ['Indomaret', 'Alfamart'],
+    },
+    {
+        key: 'credit_card',
+        label: 'Kartu Kredit',
+        icon: '💳',
+        desc: 'Visa, Mastercard, JCB',
+        logos: ['Visa', 'Mastercard'],
+    },
+];
+
+// Warna badge per logo (dekoratif)
+const LOGO_COLORS: Record<string, string> = {
+    BCA:        '#005baa',
+    BNI:        '#f15a23',
+    BRI:        '#004b87',
+    Mandiri:    '#003087',
+    GoPay:      '#00aa5b',
+    ShopeePay:  '#ee4d2d',
+    OVO:        '#4c3494',
+    Dana:       '#118eea',
+    QRIS:       '#e2231a',
+    Indomaret:  '#e2231a',
+    Alfamart:   '#e2231a',
+    Visa:       '#1a1f71',
+    Mastercard: '#eb001b',
+};
+
 export default function GameShow({ game, client_key }: { game: Game; client_key: string }) {
-    const [userId, setUserId]       = useState('');
-    const [server, setServer]       = useState('');
-    const [snapReady, setSnapReady] = useState(false);
-    const [loading, setLoading]     = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [userId, setUserId]           = useState('');
+    const [server, setServer]           = useState('');
+    const [snapReady, setSnapReady]     = useState(false);
+    const [loading, setLoading]         = useState(false);
+    const [selectedProduct, setSelectedProduct]       = useState<Product | null>(null);
+    const [selectedPayment, setSelectedPayment]       = useState<string | null>(null);
 
     const needsServer = game.slug.toLowerCase().includes('mobile-legend') ||
                         game.slug.toLowerCase().includes('mobilelegend');
@@ -58,7 +115,6 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
     const formatPrice = (price: number) =>
         new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 
-    // Load Snap.js once
     useEffect(() => {
         if (!client_key) return;
         const existing = document.getElementById('midtrans-snap');
@@ -72,15 +128,9 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
     }, [client_key]);
 
     const handleOrder = async () => {
-        if (!selectedProduct) return;
-        if (!canPay) {
-            alert('Mohon isi ID akun game kamu terlebih dahulu.');
-            return;
-        }
-        if (!snapReady || !window.snap) {
-            alert('Payment gateway belum siap, coba lagi sebentar.');
-            return;
-        }
+        if (!selectedProduct || !selectedPayment) return;
+        if (!canPay) { alert('Mohon isi ID akun game kamu terlebih dahulu.'); return; }
+        if (!snapReady || !window.snap) { alert('Payment gateway belum siap, coba lagi sebentar.'); return; }
 
         setLoading(true);
         try {
@@ -88,7 +138,11 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
             const res = await fetch('/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ product_id: selectedProduct.id, game_user_id: gameUserId }),
+                body: JSON.stringify({
+                    product_id:    selectedProduct.id,
+                    game_user_id:  gameUserId,
+                    payment_group: selectedPayment,
+                }),
             });
             const { snap_token, order_id } = await res.json();
 
@@ -112,6 +166,8 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
             setLoading(false);
         }
     };
+
+    const selectedPaymentGroup = PAYMENT_GROUPS.find(p => p.key === selectedPayment);
 
     return (
         <PublicLayout>
@@ -195,14 +251,13 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                 {/* RIGHT */}
                 <div className="flex-1 space-y-5">
 
-                    {/* STEP 1 — UID Form */}
+                    {/* STEP 1 — UID */}
                     <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center flex-shrink-0"
                                 style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>1</div>
                             <h2 className="font-bold text-slate-800">Masukkan Data Akun Kamu</h2>
                         </div>
-
                         <div className={`grid gap-3 ${needsServer ? 'grid-cols-2' : 'grid-cols-1'}`}>
                             <div>
                                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
@@ -236,7 +291,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                         )}
                     </div>
 
-                    {/* STEP 2 — Products */}
+                    {/* STEP 2 — Nominal */}
                     <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center flex-shrink-0"
@@ -280,7 +335,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                             <p className="text-xs text-slate-400 mb-3">
                                                 {product.diamond_amount > 0 ? `${product.diamond_amount} diamond` : ''}
                                             </p>
-                                            <div className={`inline-flex items-center text-xs font-bold text-white px-2.5 py-1 rounded-full transition-all ${isSelected ? 'opacity-100' : ''}`}
+                                            <div className="inline-flex items-center text-xs font-bold text-white px-2.5 py-1 rounded-full"
                                                 style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>
                                                 {formatPrice(product.price)}
                                             </div>
@@ -291,27 +346,96 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                         )}
                     </div>
 
-                    {/* STEP 3 — Order Button (muncul setelah nominal dipilih) */}
+                    {/* STEP 3 — Metode Pembayaran (muncul setelah nominal dipilih) */}
                     {selectedProduct && (
-                        <div className="bg-white border-2 border-cyan-200 rounded-2xl p-5 shadow-sm">
+                        <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center flex-shrink-0"
                                     style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>3</div>
+                                <h2 className="font-bold text-slate-800">Pilih Metode Pembayaran</h2>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                {PAYMENT_GROUPS.map((group) => {
+                                    const isSelected = selectedPayment === group.key;
+                                    return (
+                                        <button
+                                            key={group.key}
+                                            onClick={() => setSelectedPayment(isSelected ? null : group.key)}
+                                            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border-2 text-left transition-all duration-200
+                                                ${isSelected
+                                                    ? 'border-cyan-400 bg-cyan-50 shadow-sm'
+                                                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            {/* Radio indicator */}
+                                            <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-cyan-500' : 'border-slate-300'}`}>
+                                                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
+                                            </div>
+
+                                            {/* Icon + Label */}
+                                            <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-xl"
+                                                style={{ background: isSelected ? 'rgba(6,182,212,0.1)' : '#f8fafc' }}>
+                                                {group.icon}
+                                            </div>
+
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`font-semibold text-sm ${isSelected ? 'text-cyan-700' : 'text-slate-800'}`}>
+                                                    {group.label}
+                                                </p>
+                                                <p className="text-xs text-slate-400 mt-0.5">{group.desc}</p>
+                                            </div>
+
+                                            {/* Logo badges */}
+                                            <div className="flex-shrink-0 flex items-center gap-1.5 flex-wrap justify-end max-w-[140px]">
+                                                {group.logos.map(logo => (
+                                                    <span
+                                                        key={logo}
+                                                        className="text-white text-[10px] font-bold px-2 py-0.5 rounded"
+                                                        style={{ background: LOGO_COLORS[logo] ?? '#64748b' }}
+                                                    >
+                                                        {logo}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 4 — Konfirmasi & Pesan (muncul setelah metode dipilih) */}
+                    {selectedProduct && selectedPayment && (
+                        <div className="bg-white border-2 border-cyan-200 rounded-2xl p-5 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>4</div>
                                 <h2 className="font-bold text-slate-800">Konfirmasi Pesanan</h2>
                             </div>
 
                             {/* Ringkasan */}
-                            <div className="bg-slate-50 rounded-xl p-4 mb-4 flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs text-slate-500 mb-0.5">Paket dipilih</p>
-                                    <p className="font-semibold text-slate-800 text-sm">{selectedProduct.name}</p>
-                                    {selectedProduct.diamond_amount > 0 && (
-                                        <p className="text-xs text-slate-400">{selectedProduct.diamond_amount} diamond</p>
-                                    )}
+                            <div className="bg-slate-50 rounded-xl p-4 mb-4 space-y-2.5">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-500">Paket</span>
+                                    <span className="font-semibold text-slate-800">
+                                        {selectedProduct.name}
+                                        {selectedProduct.diamond_amount > 0 && (
+                                            <span className="text-slate-400 font-normal ml-1">({selectedProduct.diamond_amount} 💎)</span>
+                                        )}
+                                    </span>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-slate-500 mb-0.5">Total</p>
-                                    <p className="font-bold text-cyan-600 text-lg">{formatPrice(selectedProduct.price)}</p>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-500">Metode</span>
+                                    <span className="font-semibold text-slate-800">
+                                        {selectedPaymentGroup?.icon} {selectedPaymentGroup?.label}
+                                    </span>
+                                </div>
+                                <div className="border-t border-slate-200 pt-2.5 flex items-center justify-between">
+                                    <span className="font-bold text-slate-800">Total</span>
+                                    <span className="font-extrabold text-lg" style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                        {formatPrice(selectedProduct.price)}
+                                    </span>
                                 </div>
                             </div>
 
