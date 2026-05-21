@@ -24,9 +24,12 @@ declare global {
 }
 
 export default function CheckoutShow({ product, client_key }: Props) {
+    const params = new URLSearchParams(window.location.search);
+    const prefillUid = params.get('game_user_id') ?? '';
+
     const { data, setData,  processing, errors } = useForm({
         product_id: product.id,
-        game_user_id: '',
+        game_user_id: prefillUid,
     });
 
     const formatPrice = (price: number) =>

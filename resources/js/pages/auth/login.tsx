@@ -24,7 +24,7 @@ export default function Login({
 }: Props) {
     return (
         <>
-            <Head title="Log in" />
+            <Head title="Masuk" />
 
             <Form
                 {...store.form()}
@@ -33,9 +33,9 @@ export default function Login({
             >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-6">
+                        <div className="grid gap-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">Email</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -45,6 +45,7 @@ export default function Login({
                                     tabIndex={1}
                                     autoComplete="email"
                                     placeholder="email@example.com"
+                                    className="h-11"
                                 />
                                 <InputError message={errors.email} />
                             </div>
@@ -58,7 +59,7 @@ export default function Login({
                                             className="ml-auto text-sm"
                                             tabIndex={5}
                                         >
-                                            Forgot password?
+                                            Lupa password?
                                         </TextLink>
                                     )}
                                 </div>
@@ -69,6 +70,7 @@ export default function Login({
                                     tabIndex={2}
                                     autoComplete="current-password"
                                     placeholder="Password"
+                                    className="h-11"
                                 />
                                 <InputError message={errors.password} />
                             </div>
@@ -79,26 +81,29 @@ export default function Login({
                                     name="remember"
                                     tabIndex={3}
                                 />
-                                <Label htmlFor="remember">Remember me</Label>
+                                <Label htmlFor="remember">Ingat saya</Label>
                             </div>
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
+                                className="mt-2 w-full h-11 text-sm font-semibold"
+                                style={{
+                                    background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)',
+                                }}
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
-                                Log in
+                                Masuk
                             </Button>
                         </div>
 
                         {canRegister && (
                             <div className="text-center text-sm text-muted-foreground">
-                                Don't have an account?{' '}
-                                <TextLink href={register()} tabIndex={5}>
-                                    Sign up
+                                Belum punya akun?{' '}
+                                <TextLink href={register()} tabIndex={5} className="font-semibold">
+                                    Daftar sekarang
                                 </TextLink>
                             </div>
                         )}
@@ -116,6 +121,6 @@ export default function Login({
 }
 
 Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
+    title: 'Masuk ke akunmu',
+    description: 'Gunakan email & password yang sudah kamu daftarkan.',
 };

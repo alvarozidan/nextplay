@@ -25,6 +25,7 @@ class GameController extends Controller
 
         return Inertia::render('Games/Show', [
             'game' => $game,
+            'client_key' => config('midtrans.client_key'),
         ]);
     }
 }

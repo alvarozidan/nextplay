@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Game;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -21,14 +22,14 @@ class GameController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|unique:game,slug',
+            'name'  => 'required|string|max:255',
+            'slug'  => 'required|string|unique:games,slug',
             'image' => 'nullable|image|max:2048',
         ]);
 
         $data = $request->only('name', 'slug');
 
-        if ($request->hasFile('image')){
+        if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('games', 'public');
         }
 
@@ -40,17 +41,35 @@ class GameController extends Controller
     public function update(Request $request, Game $game)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'is_Active' => 'boolean',
+            'name'     => 'sometimes|required|string|max:255',
+            'is_active'=> 'sometimes|boolean',
+            'image'    => 'nullable|image|max:2048',
         ]);
 
-        $game->update($request->only('name', 'is_active'));
+        $data = array_filter([
+            'name'      => $request->input('name'),
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
+        ], fn($v) => !is_null($v));
+
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama kalau ada
+            if ($game->image) {
+                Storage::disk('public')->delete($game->image);
+            }
+            $data['image'] = $request->file('image')->store('games', 'public');
+        }
+
+        $game->update($data);
 
         return back()->with('success', 'Game berhasil diupdate');
     }
 
     public function destroy(Game $game)
     {
+        if ($game->image) {
+            Storage::disk('public')->delete($game->image);
+        }
+
         $game->delete();
 
         return back()->with('success', 'Game berhasil dihapus');
