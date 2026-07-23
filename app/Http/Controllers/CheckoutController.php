@@ -49,13 +49,25 @@ class CheckoutController extends Controller
         $product = Product::findOrFail($request->product_id);
         $user    = auth()->user();
 
+        $request->validate([
+                    'product_id'     => 'required|exists:products,id',
+                    'game_user_id'   => 'required|string',
+                    'payment_group'  => 'nullable|string|in:bank_transfer,ewallet,convenience_store,qris,credit_card',
+                    'guest_name'     => 'required_if:user_id,null|string|max:100',  // wajib jika guest
+                    'guest_email'    => 'required_if:user_id,null|email',
+        ]);
+
         $order = Order::create([
-            'user_id'        => $user->id,
+            'user_id'        => $user?->id,
             'game_user_id'   => $request->game_user_id,
             'status'         => 'pending',
             'total_price'    => $product->price,
             'payment_method' => $request->payment_group ?? 'midtrans',
         ]);
+
+        // Customer details: pakai data user jika login, pakai input form jika guest
+        $customerName  = $user?->name  ?? $request->guest_name;
+        $customerEmail = $user?->email ?? $request->guest_email;
 
         $order->items()->create([
             'product_id' => $product->id,
@@ -69,8 +81,8 @@ class CheckoutController extends Controller
                 'gross_amount' => (int) $product->price,
             ],
             'customer_details' => [
-                'first_name' => $user->name,
-                'email'      => $user->email,
+                'first_name' => $customerName,
+                'email'      => $customerEmail,
             ],
             'item_detail' => [
                 [

@@ -13,10 +13,6 @@ Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('game.sh
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/checkout/{product}', [CheckoutController::class, 'show'])->name('checkout.show');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    Route::patch('/orders/{order}/status', [CheckoutController::class, 'updateStatus'])->name('orders.updateStatus');
-
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
@@ -50,5 +46,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::post('/midtrans/callback', [MidtransController::class, 'handleNotification'])
     ->name('midtrans.callback')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+Route::get('/checkout/{product}', [CheckoutController::class, 'show'])->name('checkout.show');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::patch('/orders/{order}/status', [CheckoutController::class, 'updateStatus'])->name('orders.updateStatus');
 
 require __DIR__.'/settings.php';

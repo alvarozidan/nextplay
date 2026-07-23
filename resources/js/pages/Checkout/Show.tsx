@@ -13,6 +13,7 @@ interface Product {
 interface Props {
     product: Product;
     client_key: string;
+     auth: { user: { name: string; email: string } | null };
 }
 
 declare global {
@@ -85,6 +86,8 @@ export default function CheckoutShow({ product, client_key }: Props) {
         product_id:    product.id,
         game_user_id:  prefillUid,
         payment_group: '' as string,
+        guest_name:    '',
+        guest_email:   '',
     });
 
     const [snapReady, setSnapReady]       = useState(false);
@@ -133,6 +136,8 @@ export default function CheckoutShow({ product, client_key }: Props) {
                     product_id:    data.product_id,
                     game_user_id:  data.game_user_id,
                     payment_group: data.payment_group,
+                    guest_name:    data.guest_name,
+                    guest_email:   data.guest_email,
                 }),
             });
 
@@ -150,13 +155,13 @@ export default function CheckoutShow({ product, client_key }: Props) {
                         },
                         body: JSON.stringify({ status: 'paid' }),
                     });
-                    window.location.href = '/orders';
+                    window.location.href = '/';
                 },
                 onPending: () => {
-                    window.location.href = '/orders';
+                    window.location.href = '/';
                 },
                 onError: () => {
-                    window.location.href = '/orders';
+                    window.location.href = '/';
                 },
                 onClose: () => {
                     setSnapLoading(false);
@@ -169,8 +174,12 @@ export default function CheckoutShow({ product, client_key }: Props) {
         }
     };
 
+    const isGuestValid = auth.user
+                ? true
+                : !!data.guest_name && !!data.guest_email;
+
     const canSubmit =
-        !!data.game_user_id && !!data.payment_group && snapReady && !processing && !snapLoading;
+        !!data.game_user_id && !!data.payment_group && isGuestValid && snapReady && !processing && !snapLoading;
 
     return (
         <>
@@ -200,7 +209,29 @@ export default function CheckoutShow({ product, client_key }: Props) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+
                     {/* Step 1 — ID Akun Game */}
+                    {!auth.user && (
+                        <div className="space-y-3">
+                        <label className="block text-sm font-medium mb-1">
+                            Informasi Kontak
+                        </label>
+                    <input
+                        type="text"
+                        value={data.guest_name}
+                        onChange={e => setData('guest_name', e.target.value)}
+                        placeholder="Nama kamu"
+                        className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <input
+                        type="email"
+                        value={data.guest_email}
+                        onChange={e => setData('guest_email', e.target.value)}
+                        placeholder="Email kamu"
+                        className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                </div>
+    )}
                     <div>
                         <label className="block text-sm font-medium mb-1">
                             ID Akun Game
