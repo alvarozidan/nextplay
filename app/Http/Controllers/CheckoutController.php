@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Midtrans\Config;
 use Midtrans\Snap;
@@ -40,22 +41,20 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+
         $request->validate([
             'product_id'     => 'required|exists:products,id',
             'game_user_id'   => 'required|string',
             'payment_group'  => 'nullable|string|in:bank_transfer,ewallet,convenience_store,qris,credit_card',
+            'guest_name'     => [Rule::requiredIf(!$user), 'string', 'max:100'],
+            'guest_email'    => [Rule::requiredIf(!$user), 'email'],
         ]);
 
         $product = Product::findOrFail($request->product_id);
-        $user    = auth()->user();
 
-        $request->validate([
-                    'product_id'     => 'required|exists:products,id',
-                    'game_user_id'   => 'required|string',
-                    'payment_group'  => 'nullable|string|in:bank_transfer,ewallet,convenience_store,qris,credit_card',
-                    'guest_name'     => 'required_if:user_id,null|string|max:100',  // wajib jika guest
-                    'guest_email'    => 'required_if:user_id,null|email',
-        ]);
+        $customerName  = $user?->name  ?? $request->guest_name;
+        $customerEmail = $user?->email ?? $request->guest_email;
 
         $order = Order::create([
             'user_id'        => $user?->id,
@@ -63,11 +62,9 @@ class CheckoutController extends Controller
             'status'         => 'pending',
             'total_price'    => $product->price,
             'payment_method' => $request->payment_group ?? 'midtrans',
+            'guest_name'     => $user ? null : $request->guest_name,
+            'guest_email'    => $user ? null : $request->guest_email,
         ]);
-
-        // Customer details: pakai data user jika login, pakai input form jika guest
-        $customerName  = $user?->name  ?? $request->guest_name;
-        $customerEmail = $user?->email ?? $request->guest_email;
 
         $order->items()->create([
             'product_id' => $product->id,
@@ -94,7 +91,6 @@ class CheckoutController extends Controller
             ],
         ];
 
-        // Filter metode pembayaran di Snap sesuai pilihan user
         if ($request->payment_group && isset(self::PAYMENT_METHODS[$request->payment_group])) {
             $params['enabled_payments'] = self::PAYMENT_METHODS[$request->payment_group];
         }
@@ -107,16 +103,5 @@ class CheckoutController extends Controller
             'snap_token' => $snapToken,
             'order_id'   => $order->id,
         ]);
-    }
-
-    public function updateStatus(Request $request, Order $order)
-    {
-        $request->validate([
-            'status' => 'required|in:pending,paid,processing,completed,failed',
-        ]);
-
-        $order->update(['status' => $request->status]);
-
-        return response()->json(['success' => true]);
     }
 }

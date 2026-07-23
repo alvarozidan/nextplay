@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, usePage } from '@inertiajs/react';
 import { show as GameShow } from '@/routes/game';
 
 interface Product {
@@ -13,7 +13,6 @@ interface Product {
 interface Props {
     product: Product;
     client_key: string;
-     auth: { user: { name: string; email: string } | null };
 }
 
 declare global {
@@ -79,6 +78,7 @@ const LOGO_COLORS: Record<string, string> = {
 };
 
 export default function CheckoutShow({ product, client_key }: Props) {
+    const { auth } = usePage().props;
     const params = new URLSearchParams(window.location.search);
     const prefillUid = params.get('game_user_id') ?? '';
 
@@ -144,18 +144,8 @@ export default function CheckoutShow({ product, client_key }: Props) {
             const { snap_token, order_id } = await res.json();
 
             window.snap.pay(snap_token, {
-                onSuccess: async () => {
-                    const csrf =
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-                    await fetch(`/orders/${order_id}/status`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrf,
-                        },
-                        body: JSON.stringify({ status: 'paid' }),
-                    });
-                    window.location.href = '/';
+                onSuccess: () => {
+                    window.location.href = auth.user ? `/orders/${order_id}` : '/';
                 },
                 onPending: () => {
                     window.location.href = '/';

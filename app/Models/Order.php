@@ -22,8 +22,8 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function product()
+    public function firstProduct(): ?Product
     {
-    return $this->belongsTo(Product::class, 'id'); // sesuaikan foreign key
+        return $this->items->first()?->product;
     }
 }

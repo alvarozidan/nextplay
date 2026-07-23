@@ -41,14 +41,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/news/{news}', [Admin\NewsController::class, 'destroy'])->name('news.destroy');
 });
 
-// Di luar middleware 'auth' — Midtrans tidak login!
-// Di luar middleware CSRF — request dari server Midtrans, bukan browser
 Route::post('/midtrans/callback', [MidtransController::class, 'handleNotification'])
     ->name('midtrans.callback')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 Route::get('/checkout/{product}', [CheckoutController::class, 'show'])->name('checkout.show');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-Route::patch('/orders/{order}/status', [CheckoutController::class, 'updateStatus'])->name('orders.updateStatus');
 
 require __DIR__.'/settings.php';
