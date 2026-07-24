@@ -40,6 +40,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/news', [Admin\NewsController::class, 'index'])->name('news.index');
     Route::post('/news', [Admin\NewsController::class, 'store'])->name('news.store');
     Route::put('/news/{news}', [Admin\NewsController::class, 'update'])->name('news.update');
+    Route::get('/news/{news}', [NewsController::class, 'show'])->name('news.show');
     Route::delete('/news/{news}', [Admin\NewsController::class, 'destroy'])->name('news.destroy');
 
     Route::get('/reports', [Admin\ReportController::class, 'index'])->name('reports.index');

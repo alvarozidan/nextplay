@@ -1,5 +1,5 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
 
 interface NewsItem {
@@ -7,15 +7,144 @@ interface NewsItem {
     title: string;
     tag: string;
     excerpt: string;
+    content: string | null;
     image: string | null;
     read_time: number;
     is_published: boolean;
     date: string;
 }
 
-export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedNews {
+    data: NewsItem[];
+    links: PaginationLink[];
+    current_page: number;
+    last_page: number;
+    total: number;
+}
+
+interface Props {
+    news: PaginatedNews;
+    games: string[];
+}
+
+// Komponen kecil untuk preview gambar sebelum diupload,
+// bisa diklik untuk melihat ukuran penuh (lightbox) lalu ditutup lagi.
+function ImagePreview({ file, existingUrl }: { file: File | null; existingUrl?: string | null }) {
+    const [preview, setPreview]   = useState<string | null>(null);
+    const [showFull, setShowFull] = useState(false);
+
+    useEffect(() => {
+        if (!file) {
+            setPreview(null);
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        setPreview(url);
+        return () => URL.revokeObjectURL(url);
+    }, [file]);
+
+    // Kalau gambar berubah, pastikan lightbox lama tertutup
+    useEffect(() => {
+        setShowFull(false);
+    }, [preview, existingUrl]);
+
+    // Tutup lightbox dengan tombol Escape
+    useEffect(() => {
+        if (!showFull) return;
+        const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowFull(false);
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [showFull]);
+
+    const src = preview ?? (existingUrl ? `/storage/${existingUrl}` : null);
+
+    if (!src) return null;
+
+    return (
+        <>
+            <div className="mt-2 flex items-center gap-3">
+                <button
+                    type="button"
+                    onClick={() => setShowFull(true)}
+                    className="group relative w-24 h-24 rounded-lg overflow-hidden border border-border cursor-zoom-in"
+                    title="Klik untuk lihat ukuran penuh"
+                >
+                    <img
+                        src={src}
+                        alt="Preview gambar berita"
+                        className="w-full h-full object-cover"
+                    />
+                    <span className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-medium transition">
+                            Lihat
+                        </span>
+                    </span>
+                </button>
+                <span className="text-xs text-muted-foreground">
+                    {preview ? 'Preview gambar baru' : 'Gambar saat ini'}
+                </span>
+            </div>
+
+            {/* Lightbox fullscreen */}
+            {showFull && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-6"
+                    onClick={() => setShowFull(false)}
+                >
+                    <button
+                        type="button"
+                        onClick={() => setShowFull(false)}
+                        className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition"
+                        aria-label="Tutup"
+                    >
+                        ✕
+                    </button>
+                    <img
+                        src={src}
+                        alt="Preview gambar berita (ukuran penuh)"
+                        onClick={e => e.stopPropagation()}
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                    />
+                </div>
+            )}
+        </>
+    );
+}
+
+function Pagination({ links }: { links: PaginationLink[] }) {
+    if (links.length <= 3) return null;
+
+    return (
+        <div className="flex flex-wrap items-center gap-1 pt-2">
+            {links.map((link, i) => (
+                <button
+                    key={i}
+                    disabled={!link.url}
+                    onClick={() => link.url && router.get(link.url, {}, { preserveScroll: true })}
+                    className={`text-xs px-3 py-1.5 rounded-lg border transition ${
+                        link.active
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : link.url
+                            ? 'hover:bg-muted border-border'
+                            : 'opacity-40 cursor-not-allowed border-border'
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: link.label }}
+                />
+            ))}
+        </div>
+    );
+}
+
+export default function AdminNewsIndex({ news, games }: Props) {
     const [showForm, setShowForm]   = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const editFileInputRef = useRef<HTMLInputElement>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         title:        '',
@@ -34,37 +163,52 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
         content:      '',
         read_time:    3,
         is_published: true,
+        image:        null as File | null,
     });
+
+    const [editingItem, setEditingItem] = useState<NewsItem | null>(null);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         post('/admin/news', {
+            forceFormData: true,
             onSuccess: () => { reset(); setShowForm(false); },
         });
     }
 
     function startEdit(item: NewsItem) {
         setEditingId(item.id);
+        setEditingItem(item);
         editForm.setData({
             title:        item.title,
             tag:          item.tag,
             excerpt:      item.excerpt,
-            content:      '',
+            content:      item.content ?? '',
             read_time:    item.read_time,
             is_published: item.is_published,
+            image:        null,
         });
+    }
+
+    function cancelEdit() {
+        setEditingId(null);
+        setEditingItem(null);
+        editForm.reset();
+        editForm.clearErrors();
     }
 
     function handleEditSubmit(e: React.FormEvent, id: number) {
         e.preventDefault();
-        editForm.put(`/admin/news/${id}`, {
-            onSuccess: () => setEditingId(null),
+        editForm.transform((d) => ({ ...d, _method: 'put' }));
+        editForm.post(`/admin/news/${id}`, {
+            forceFormData: true,
+            onSuccess: () => cancelEdit(),
         });
     }
 
     function handleDelete(id: number) {
         if (confirm('Yakin ingin menghapus berita ini?')) {
-            router.delete(`/admin/news/${id}`);
+            router.delete(`/admin/news/${id}`, { preserveScroll: true });
         }
     }
 
@@ -75,7 +219,7 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
             excerpt:      item.excerpt,
             read_time:    item.read_time,
             is_published: !item.is_published,
-        });
+        }, { preserveScroll: true });
     }
 
     return (
@@ -83,7 +227,10 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
             <Head title="Kelola Berita" />
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Kelola Berita</h1>
+                    <div>
+                        <h1 className="text-2xl font-semibold">Kelola Berita</h1>
+                        <p className="text-sm text-muted-foreground">{news.total} berita total</p>
+                    </div>
                     <button
                         onClick={() => setShowForm(!showForm)}
                         className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
@@ -116,11 +263,16 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                                 <label className="block text-sm font-medium mb-1">Tag / Game</label>
                                 <input
                                     type="text"
+                                    list="tag-options"
                                     value={data.tag}
                                     onChange={e => setData('tag', e.target.value)}
                                     placeholder="contoh: Mobile Legends"
                                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
+                                <datalist id="tag-options">
+                                    {games.map(g => <option key={g} value={g} />)}
+                                    <option value="Umum" />
+                                </datalist>
                                 {errors.tag && <p className="text-destructive text-xs mt-1">{errors.tag}</p>}
                             </div>
                             <div>
@@ -137,12 +289,15 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">Ringkasan</label>
+                            <label className="block text-sm font-medium mb-1">
+                                Ringkasan <span className="text-muted-foreground font-normal">({data.excerpt.length}/500)</span>
+                            </label>
                             <textarea
                                 value={data.excerpt}
                                 onChange={e => setData('excerpt', e.target.value)}
                                 placeholder="Ringkasan singkat berita (max 500 karakter)..."
                                 rows={3}
+                                maxLength={500}
                                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                             />
                             {errors.excerpt && <p className="text-destructive text-xs mt-1">{errors.excerpt}</p>}
@@ -171,6 +326,8 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                                 onChange={e => setData('image', e.target.files?.[0] ?? null)}
                                 className="w-full border rounded-lg px-3 py-2 text-sm"
                             />
+                            {errors.image && <p className="text-destructive text-xs mt-1">{errors.image}</p>}
+                            <ImagePreview file={data.image} />
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -198,15 +355,18 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
 
                 {/* Daftar berita */}
                 <div className="border rounded-xl divide-y">
-                    {news.length === 0 ? (
+                    {news.data.length === 0 ? (
                         <p className="p-4 text-muted-foreground text-sm">Belum ada berita.</p>
                     ) : (
-                        news.map(item => (
+                        news.data.map(item => (
                             <div key={item.id} className="p-4 space-y-3">
                                 <div className="flex items-start gap-4">
 
                                     {/* Thumbnail */}
-                                    <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-muted border border-border">
+                                    <Link
+                                        href={`/news/${item.id}`}
+                                        className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-muted border border-border"
+                                    >
                                         {item.image ? (
                                             <img
                                                 src={`/storage/${item.image}`}
@@ -216,7 +376,7 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-2xl">📰</div>
                                         )}
-                                    </div>
+                                    </Link>
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
@@ -235,7 +395,7 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                                     {/* Aksi */}
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                         <button
-                                            onClick={() => editingId === item.id ? setEditingId(null) : startEdit(item)}
+                                            onClick={() => editingId === item.id ? cancelEdit() : startEdit(item)}
                                             className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 transition"
                                         >
                                             {editingId === item.id ? 'Batal' : 'Edit'}
@@ -277,6 +437,7 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                                                 onChange={e => editForm.setData('title', e.target.value)}
                                                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                             />
+                                            {editForm.errors.title && <p className="text-destructive text-xs mt-1">{editForm.errors.title}</p>}
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -284,6 +445,7 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                                                 <label className="block text-xs font-medium mb-1">Tag / Game</label>
                                                 <input
                                                     type="text"
+                                                    list="tag-options"
                                                     value={editForm.data.tag}
                                                     onChange={e => editForm.setData('tag', e.target.value)}
                                                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -303,13 +465,44 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-medium mb-1">Ringkasan</label>
+                                            <label className="block text-xs font-medium mb-1">
+                                                Ringkasan <span className="text-muted-foreground font-normal">({editForm.data.excerpt.length}/500)</span>
+                                            </label>
                                             <textarea
                                                 value={editForm.data.excerpt}
                                                 onChange={e => editForm.setData('excerpt', e.target.value)}
                                                 rows={3}
+                                                maxLength={500}
                                                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                                             />
+                                            {editForm.errors.excerpt && <p className="text-destructive text-xs mt-1">{editForm.errors.excerpt}</p>}
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1">
+                                                Isi Artikel <span className="text-muted-foreground font-normal">(opsional)</span>
+                                            </label>
+                                            <textarea
+                                                value={editForm.data.content}
+                                                onChange={e => editForm.setData('content', e.target.value)}
+                                                rows={5}
+                                                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1">
+                                                Ganti Gambar <span className="text-muted-foreground font-normal">(opsional)</span>
+                                            </label>
+                                            <input
+                                                ref={editFileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={e => editForm.setData('image', e.target.files?.[0] ?? null)}
+                                                className="w-full border rounded-lg px-3 py-2 text-sm"
+                                            />
+                                            {editForm.errors.image && <p className="text-destructive text-xs mt-1">{editForm.errors.image}</p>}
+                                            <ImagePreview file={editForm.data.image} existingUrl={editingItem?.image} />
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -333,7 +526,7 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => setEditingId(null)}
+                                                onClick={cancelEdit}
                                                 className="px-4 py-1.5 rounded-lg text-sm border hover:bg-muted transition"
                                             >
                                                 Batal
@@ -345,6 +538,8 @@ export default function AdminNewsIndex({ news }: { news: NewsItem[] }) {
                         ))
                     )}
                 </div>
+
+                <Pagination links={news.links} />
             </div>
         </PublicLayout>
     );

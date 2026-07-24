@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Game;
 use App\Models\News;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,11 +13,14 @@ class NewsController extends Controller
 {
     public function index()
     {
-        $news = News::latest()->get()->map(fn($item) => [
+        $news = News::latest()->paginate(10)->withQueryString();
+
+        $news->getCollection()->transform(fn($item) => [
             'id'           => $item->id,
             'title'        => $item->title,
             'tag'          => $item->tag,
             'excerpt'      => $item->excerpt,
+            'content'      => $item->content,
             'image'        => $item->image,
             'read_time'    => $item->read_time,
             'is_published' => $item->is_published,
@@ -24,7 +28,9 @@ class NewsController extends Controller
         ]);
 
         return Inertia::render('Admin/News/Index', [
-            'news' => $news,
+            'news'  => $news,
+            // Daftar nama game yang sudah terdaftar, dipakai sebagai saran/opsi tag
+            'games' => Game::orderBy('name')->pluck('name'),
         ]);
     }
 
@@ -64,6 +70,8 @@ class NewsController extends Controller
             'image'        => 'nullable|image|max:2048',
         ]);
 
+        // Hanya field yang benar-benar dikirim yang akan diupdate,
+        // supaya konten/gambar lama tidak tertimpa kosong secara tidak sengaja.
         $data = $request->only('title', 'tag', 'excerpt', 'content', 'read_time', 'is_published');
 
         if ($request->hasFile('image')) {
