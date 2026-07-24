@@ -23,8 +23,9 @@ createInertiaApp({
             case name.startsWith('Games/'):
             case name.startsWith('Orders/'):
             case name.startsWith('Checkout/'):
-                case name.startsWith('News/'):
-                    case name.startsWith('Admin/'):
+            case name.startsWith('News/'):
+            case name.startsWith('Leaderboard/'):
+            case name.startsWith('Admin/'):
                 return null; // layout sudah di-handle di dalam komponen masing-masing
             default:
                 return AppLayout; // Admin & dashboard tetap pakai sidebar

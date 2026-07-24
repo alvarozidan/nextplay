@@ -5,12 +5,14 @@ use App\Http\Controllers\GameController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\MidtransController;
 
 Route::get('/', [GameController::class, 'index'])->name('home');
 Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('game.show');
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
@@ -39,6 +41,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/news', [Admin\NewsController::class, 'store'])->name('news.store');
     Route::put('/news/{news}', [Admin\NewsController::class, 'update'])->name('news.update');
     Route::delete('/news/{news}', [Admin\NewsController::class, 'destroy'])->name('news.destroy');
+
+    Route::get('/reports', [Admin\ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export/excel', [Admin\ReportController::class, 'exportExcel'])->name('reports.export.excel');
+    Route::get('/reports/export/pdf', [Admin\ReportController::class, 'exportPdf'])->name('reports.export.pdf');
 });
 
 Route::post('/midtrans/callback', [MidtransController::class, 'handleNotification'])

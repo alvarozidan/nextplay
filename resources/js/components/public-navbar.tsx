@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {
     Menu, X, Gamepad2, ShoppingBag, LogIn,
     Newspaper, ShieldCheck, ChevronDown,
-    LayoutDashboard, Package, ClipboardList
+    LayoutDashboard, Package, ClipboardList, Trophy, FileBarChart, House
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -23,10 +23,12 @@ const adminLinks = [
     { href: '/admin/products', label: 'Kelola Produk', icon: Package },
     { href: '/admin/orders', label: 'Kelola Order', icon: ClipboardList },
     { href: '/admin/news', label: 'Kelola Berita', icon: Newspaper },
+    { href: '/admin/reports', label: 'Laporan', icon: FileBarChart },
 ];
 
 const navLinks = [
-    { href: '/', label: 'Beranda', icon: null },
+    { href: '/', label: 'Beranda', icon: House },
+    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/orders', label: 'Riwayat Transaksi', icon: ShoppingBag },
     { href: '/news', label: 'Berita Game', icon: Newspaper },
 ];

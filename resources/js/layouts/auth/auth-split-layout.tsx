@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Gamepad2, Lock } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
@@ -41,7 +41,7 @@ export default function AuthSplitLayout({
                 {/* Logo */}
                 <Link href={home()} className="relative z-10 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                        <AppLogoIcon className="size-6 fill-current text-white" />
+                        <Gamepad2 className="size-6 text-white"/>
                     </div>
                     <span className="text-2xl font-extrabold text-white tracking-tight">
                         NextPlay
@@ -74,7 +74,10 @@ export default function AuthSplitLayout({
 
                 {/* Footer */}
                 <div className="relative z-10 flex items-center justify-between text-xs text-white/60">
-                    <span>🔒 Terproteksi enkripsi &amp; OTP</span>
+                   <span className="flex items-center gap-2">
+                        <Lock className="w-4 h-4" />
+                        Terproteksi enkripsi &amp; OTP
+                    </span>
                     <span>Support 24/7</span>
                 </div>
             </div>
