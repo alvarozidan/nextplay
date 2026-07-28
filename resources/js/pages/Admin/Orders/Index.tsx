@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
 import { update as orderUpdate } from '@/routes/admin/orders';
+import { Gamepad2, CreditCard, Clock, Trash2, ClipboardList } from 'lucide-react';
 
 interface Order {
     id: number;
@@ -70,15 +71,21 @@ function OrderRow({ order }: { order: Order }) {
                             {gameName ?? '—'}{productName ? ` — ${productName}` : ''}
                         </p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <span className="text-xs text-slate-400">🎮 {order.game_user_id}</span>
+                            <span className="text-xs text-slate-400 inline-flex items-center gap-1">
+                                <Gamepad2 className="w-3 h-3" /> {order.game_user_id}
+                            </span>
                             {order.payment_method && (
                                 <>
                                     <span className="text-slate-200 text-xs">·</span>
-                                    <span className="text-xs text-slate-400 capitalize">💳 {order.payment_method}</span>
+                                    <span className="text-xs text-slate-400 capitalize inline-flex items-center gap-1">
+                                        <CreditCard className="w-3 h-3" /> {order.payment_method}
+                                    </span>
                                 </>
                             )}
                             <span className="text-slate-200 text-xs">·</span>
-                            <span className="text-xs text-slate-400">🕒 {formatDate(order.created_at)}</span>
+                            <span className="text-xs text-slate-400 inline-flex items-center gap-1">
+                                <Clock className="w-3 h-3" /> {formatDate(order.created_at)}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -112,9 +119,7 @@ function OrderRow({ order }: { order: Order }) {
                         onClick={() => setConfirmDelete(true)}
                         className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 transition-colors font-medium"
                     >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-3.5 h-3.5" />
                         Hapus Order
                     </button>
                 ) : (
@@ -185,7 +190,7 @@ export default function AdminOrdersIndex({ orders }: { orders: Order[] }) {
                 {/* Orders list */}
                 {orders.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-2xl border border-slate-100">
-                        <div className="text-4xl mb-3">📋</div>
+                        <ClipboardList className="w-10 h-10 mx-auto mb-3 text-slate-300" />
                         <p className="text-slate-500 font-medium">Belum ada order masuk.</p>
                     </div>
                 ) : (

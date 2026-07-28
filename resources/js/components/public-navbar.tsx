@@ -48,8 +48,12 @@ export default function PublicNavbar() {
 
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary shrink-0">
-                    <Gamepad2 className="h-6 w-6" />
-                    <span>NextPlay</span>
+                    <img
+                        src="/logo.png"
+                        alt="NextPlay Logo"
+                        className="h-15 w-15"
+                    />
+                    
                 </Link>
 
                 {/* Desktop Menu */}

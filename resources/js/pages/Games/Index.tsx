@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import { Search, ChevronLeft, ChevronRight, Zap, Shield, Globe } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Zap, Shield, Globe, Flame, Sparkles, Swords, Gamepad2, type LucideIcon } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 
 interface Game {
@@ -21,30 +21,33 @@ const SLIDES = [
         id: 1,
         title: 'Mobile Legends',
         subtitle: 'Top Up Diamond ML sekarang, proses 1 menit!',
-        badge: '🔥 Terlaris',
+        badgeIcon: Flame,
+        badge: 'Terlaris',
         gradient: 'from-blue-900 via-blue-700 to-cyan-500',
         accent: '#38bdf8',
-        emoji: '⚔️',
+        icon: Swords,
         slug: 'mobile-legends',
     },
     {
         id: 2,
         title: 'Free Fire',
         subtitle: 'Diamond & Bundle eksklusif tersedia setiap hari',
-        badge: '⚡ Promo',
+        badgeIcon: Zap,
+        badge: 'Promo',
         gradient: 'from-orange-900 via-orange-700 to-yellow-500',
         accent: '#fbbf24',
-        emoji: '🔥',
+        icon: Flame,
         slug: 'free-fire',
     },
     {
         id: 3,
         title: 'Genshin Impact',
         subtitle: 'Genesis Crystal & Primogem — harga terbaik',
-        badge: '✨ Baru',
+        badgeIcon: Sparkles,
+        badge: 'Baru',
         gradient: 'from-violet-900 via-purple-700 to-indigo-500',
         accent: '#a78bfa',
-        emoji: '🌟',
+        icon: Sparkles,
         slug: 'genshin-impact',
     },
 ];
@@ -110,9 +113,10 @@ function HeroBanner({ games }: { games: Game[] }) {
             <div className="relative z-10 h-full flex items-center px-8 md:px-12">
                 <div className="flex-1">
                     <span
-                        className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full mb-3"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full mb-3"
                         style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)' }}
                     >
+                        <slide.badgeIcon className="w-3.5 h-3.5" />
                         {slide.badge}
                     </span>
 
@@ -143,13 +147,13 @@ function HeroBanner({ games }: { games: Game[] }) {
                     </Link>
                 </div>
 
-                {/* Big emoji */}
+                {/* Big icon */}
                 <div
-                    key={`emoji-${current}`}
-                    className="hidden md:flex items-center justify-center text-8xl lg:text-9xl opacity-40 flex-shrink-0 mr-8"
+                    key={`icon-${current}`}
+                    className="hidden md:flex items-center justify-center opacity-40 flex-shrink-0 mr-8"
                     style={{ animation: 'fadeSlideUp 0.5s ease forwards', filter: 'drop-shadow(0 0 40px rgba(255,255,255,0.3))' }}
                 >
-                    {slide.emoji}
+                    <slide.icon className="w-32 h-32 lg:w-40 lg:h-40 text-white" />
                 </div>
             </div>
 
@@ -236,7 +240,7 @@ export default function GamesIndex({ games }: Props) {
 
             {/* Section Title */}
             <div className="mb-6 flex items-center gap-2">
-                <span className="text-lg">🎮</span>
+                <Gamepad2 className="w-5 h-5 text-cyan-500" />
                 <h2 className="text-lg font-semibold uppercase tracking-wide">Semua Game</h2>
                 <span className="ml-auto text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
                     {filtered.length} game
@@ -246,7 +250,7 @@ export default function GamesIndex({ games }: Props) {
             {/* Game Grid */}
             {filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
-                    <span className="text-5xl">🔍</span>
+                    <Search className="w-12 h-12" />
                     <p className="text-sm">Game tidak ditemukan</p>
                 </div>
             ) : (
@@ -265,8 +269,8 @@ export default function GamesIndex({ games }: Props) {
                                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                     />
                                 ) : (
-                                    <div className="flex h-full w-full items-center justify-center text-4xl bg-muted">
-                                        🎮
+                                    <div className="flex h-full w-full items-center justify-center bg-muted">
+                                        <Gamepad2 className="w-8 h-8 text-muted-foreground" />
                                     </div>
                                 )}
                             </div>

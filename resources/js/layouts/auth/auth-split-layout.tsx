@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { CheckCircle, Gamepad2, Lock } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { ArrowLeft, CheckCircle, Circle, Gamepad2, Lock } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
@@ -15,13 +15,32 @@ export default function AuthSplitLayout({
     title,
     description,
 }: AuthLayoutProps) {
+    const { url } = usePage();
+    const isRegister = url.startsWith('/register');
+
+    const heading = isRegister ? (
+        <>
+            Buat akunmu dan<br />
+            mulai top up lebih mudah.
+        </>
+    ) : (
+        <>
+            Masuk dan lanjutkan<br />
+            top up favoritmu.
+        </>
+    );
+
+    const subDescription = isRegister
+    ? 'Akses riwayat pesanan, cek status transaksi, dan nikmati harga spesial member langsung dari satu dashboard.'
+    : 'Simpan riwayat transaksi, dapatkan harga spesial, dan akses semua layanan dari satu akun Nextplay Top Up.';
+
     return (
         <div className="min-h-screen flex">
             {/* LEFT PANEL */}
             <div
                 className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-10 overflow-hidden"
                 style={{
-                    background: 'linear-gradient(135deg, #1a9fd4 0%, #0d7ab5 30%, #0a9e7e 70%, #0bbf8a 100%)',
+                    background: 'linear-gradient(135deg, #0a2f66 0%, #0d4f9e 30%, #1a7fd4 65%, #3fa9f5 100%)',
                 }}
             >
                 {/* decorative circles */}
@@ -40,12 +59,11 @@ export default function AuthSplitLayout({
 
                 {/* Logo */}
                 <Link href={home()} className="relative z-10 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                        <Gamepad2 className="size-6 text-white"/>
-                    </div>
-                    <span className="text-2xl font-extrabold text-white tracking-tight">
-                        NextPlay
-                    </span>
+                    <img
+                        src="/Footer.png"
+                        alt="NextPlay Logo"
+                        className="h-10 w-30"
+                    />
                 </Link>
 
                 {/* Center Content */}
@@ -54,19 +72,29 @@ export default function AuthSplitLayout({
                         Selamat Datang Kembali
                     </p>
                     <h2 className="text-4xl font-extrabold text-white leading-tight mb-4">
-                        Masuk dan lanjutkan<br />
-                        top up favoritmu.
+                        {heading}
                     </h2>
-                    <p className="text-white/80 text-sm mb-8 max-w-xs leading-relaxed">
-                        Akses riwayat pesanan, cek status transaksi, dan nikmati harga spesial
-                        member langsung dari satu dashboard.
-                    </p>
+                   <p className="text-white/80 text-sm mb-8 max-w-xs leading-relaxed">
+                        {subDescription}
+                  </p>
 
                     <ul className="space-y-3">
                         {features.map((f) => (
                             <li key={f} className="flex items-center gap-3">
-                                <CheckCircle className="w-5 h-5 text-white flex-shrink-0" />
-                                <span className="text-white text-sm font-medium">{f}</span>
+                                {isRegister ? (
+                                    <Circle className="w-5 h-5 text-white/60 flex-shrink-0" />
+                                ) : (
+                                    <CheckCircle className="w-5 h-5 text-white flex-shrink-0" />
+                                )}
+                                <span
+                                    className={
+                                        isRegister
+                                            ? 'text-white/70 text-sm font-medium'
+                                            : 'text-white text-sm font-medium'
+                                    }
+                                >
+                                    {f}
+                                </span>
                             </li>
                         ))}
                     </ul>
@@ -87,7 +115,7 @@ export default function AuthSplitLayout({
                 {/* Mobile logo */}
                 <Link href={home()} className="flex items-center gap-2 mb-8 lg:hidden">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl"
-                        style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>
+                        style={{ background: 'linear-gradient(135deg, #0d4f9e, #1a7fd4)' }}>
                         <AppLogoIcon className="size-5 fill-current text-white" />
                     </div>
                     <span className="text-xl font-extrabold text-gray-800">NextPlay</span>
@@ -97,11 +125,9 @@ export default function AuthSplitLayout({
                     {/* Back to home */}
                     <Link
                         href={home()}
-                        className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 mb-8 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 mb-8 transition-colors"
                     >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
+                        <ArrowLeft className="w-3.5 h-3.5" />
                         Beranda
                     </Link>
 

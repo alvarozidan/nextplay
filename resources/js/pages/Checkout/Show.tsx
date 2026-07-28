@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Head, useForm, Link, usePage } from '@inertiajs/react';
 import { show as GameShow } from '@/routes/game';
+import { ArrowLeft, Landmark, Smartphone, QrCode, Store, CreditCard, type LucideIcon } from 'lucide-react';
 
 interface Product {
     id: number;
@@ -23,39 +24,39 @@ declare global {
     }
 }
 
-const PAYMENT_GROUPS = [
+const PAYMENT_GROUPS: { key: string; label: string; icon: LucideIcon; desc: string; logos: string[] }[] = [
     {
         key: 'bank_transfer',
         label: 'Transfer Bank',
-        icon: '🏦',
+        icon: Landmark,
         desc: 'BCA, BNI, BRI, Mandiri, dll',
         logos: ['BCA', 'BNI', 'BRI', 'Mandiri'],
     },
     {
         key: 'ewallet',
         label: 'E-Wallet',
-        icon: '📱',
+        icon: Smartphone,
         desc: 'GoPay, ShopeePay, OVO, Dana',
         logos: ['GoPay', 'ShopeePay', 'OVO', 'Dana'],
     },
     {
         key: 'qris',
         label: 'QRIS',
-        icon: '📷',
+        icon: QrCode,
         desc: 'Scan QR dari semua aplikasi',
         logos: ['QRIS'],
     },
     {
         key: 'convenience_store',
         label: 'Minimarket',
-        icon: '🏪',
+        icon: Store,
         desc: 'Indomaret & Alfamart',
         logos: ['Indomaret', 'Alfamart'],
     },
     {
         key: 'credit_card',
         label: 'Kartu Kredit',
-        icon: '💳',
+        icon: CreditCard,
         desc: 'Visa, Mastercard, JCB',
         logos: ['Visa', 'Mastercard'],
     },
@@ -180,9 +181,10 @@ export default function CheckoutShow({ product, client_key }: Props) {
                 <div className="mb-6">
                     <Link
                         href={GameShow(product.game.slug)}
-                        className="text-muted-foreground hover:text-primary text-sm"
+                        className="text-muted-foreground hover:text-primary text-sm inline-flex items-center gap-1.5"
                     >
-                        ← Kembali
+                        <ArrowLeft className="w-4 h-4" />
+                        Kembali
                     </Link>
                 </div>
 
@@ -271,7 +273,7 @@ export default function CheckoutShow({ product, client_key }: Props) {
                                         </div>
 
                                         {/* Icon */}
-                                        <span className="text-xl flex-shrink-0">{group.icon}</span>
+                                        <group.icon className="w-5 h-5 flex-shrink-0 text-muted-foreground" />
 
                                         {/* Label + desc */}
                                         <div className="flex-1 min-w-0">

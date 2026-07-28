@@ -2,6 +2,11 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
 import { show as orderShow } from '@/routes/orders';
+import {
+    Clock, CreditCard, Loader2, CheckCircle2, XCircle, Circle,
+    ClipboardList, ChevronRight, Trash2,
+    type LucideIcon,
+} from 'lucide-react';
 
 interface Order {
     id: number;
@@ -12,12 +17,12 @@ interface Order {
     items: { product: { name: string; game: { name: string } } }[];
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; icon: string }> = {
-    pending:    { label: 'Menunggu',  color: 'bg-amber-100 text-amber-700 ring-amber-200',      icon: '⏳' },
-    paid:       { label: 'Dibayar',   color: 'bg-blue-100 text-blue-700 ring-blue-200',         icon: '💳' },
-    processing: { label: 'Diproses', color: 'bg-purple-100 text-purple-700 ring-purple-200',   icon: '⚙️' },
-    completed:  { label: 'Selesai',  color: 'bg-emerald-100 text-emerald-700 ring-emerald-200', icon: '✅' },
-    failed:     { label: 'Gagal',    color: 'bg-red-100 text-red-700 ring-red-200',             icon: '❌' },
+const STATUS_MAP: Record<string, { label: string; color: string; icon: LucideIcon; spin?: boolean }> = {
+    pending:    { label: 'Menunggu',  color: 'bg-amber-100 text-amber-700 ring-amber-200',      icon: Clock },
+    paid:       { label: 'Dibayar',   color: 'bg-blue-100 text-blue-700 ring-blue-200',         icon: CreditCard },
+    processing: { label: 'Diproses', color: 'bg-purple-100 text-purple-700 ring-purple-200',   icon: Loader2, spin: true },
+    completed:  { label: 'Selesai',  color: 'bg-emerald-100 text-emerald-700 ring-emerald-200', icon: CheckCircle2 },
+    failed:     { label: 'Gagal',    color: 'bg-red-100 text-red-700 ring-red-200',             icon: XCircle },
 };
 
 export default function OrdersIndex({ orders }: { orders: Order[] }) {
@@ -63,7 +68,7 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
 
                 {orders.length === 0 ? (
                     <div className="text-center py-24 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                        <div className="text-5xl mb-4">📋</div>
+                        <ClipboardList className="w-12 h-12 mx-auto mb-4 text-slate-300" />
                         <p className="font-semibold text-slate-700 mb-1">Belum ada transaksi</p>
                         <p className="text-sm text-slate-400 mb-5">Yuk mulai top up game favoritmu!</p>
                         <Link
@@ -77,7 +82,7 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                 ) : (
                     <div className="space-y-3">
                         {orders.map((order) => {
-                            const status = STATUS_MAP[order.status] ?? { label: order.status, color: 'bg-slate-100 text-slate-600 ring-slate-200', icon: '•' };
+                            const status = STATUS_MAP[order.status] ?? { label: order.status, color: 'bg-slate-100 text-slate-600 ring-slate-200', icon: Circle };
                             const { date, time } = formatDate(order.created_at);
                             const gameName = order.items[0]?.product?.game?.name;
                             const productName = order.items[0]?.product?.name;
@@ -118,21 +123,24 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                         {/* Right */}
                                         <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
                                             <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ring-1 ${status.color}`}>
-                                                <span>{status.icon}</span>
+                                                <status.icon className={`w-3 h-3 ${status.spin ? 'animate-spin' : ''}`} />
                                                 {status.label}
                                             </span>
                                             <p className="font-bold text-sm text-slate-800">{formatPrice(order.total_price)}</p>
                                         </div>
 
-                                        <svg className="w-4 h-4 text-slate-300 flex-shrink-0 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
+                                        <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 group-hover:text-cyan-400 transition-colors" />
                                     </Link>
 
                                     {/* Delete bar */}
                                     <div className="border-t border-slate-100 px-4 py-2.5 flex items-center justify-between bg-slate-50/50">
-                                        <span className="text-xs text-slate-400">
-                                            {order.payment_method ? `💳 ${order.payment_method}` : ''}
+                                        <span className="text-xs text-slate-400 inline-flex items-center gap-1">
+                                            {order.payment_method && (
+                                                <>
+                                                    <CreditCard className="w-3 h-3" />
+                                                    {order.payment_method}
+                                                </>
+                                            )}
                                         </span>
 
                                         {!isConfirming ? (
@@ -140,9 +148,7 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                                 onClick={() => setConfirmId(order.id)}
                                                 className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 transition-colors font-medium"
                                             >
-                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
+                                                <Trash2 className="w-3.5 h-3.5" />
                                                 Hapus
                                             </button>
                                         ) : (

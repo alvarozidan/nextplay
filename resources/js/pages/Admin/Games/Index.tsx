@@ -2,6 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
 import { store as adminGamesStore, destroy as adminGamesDestroy, update as adminGamesUpdate } from '@/routes/admin/games';
+import { Plus, Gamepad2, Camera, AlertTriangle } from 'lucide-react';
 
 interface Game {
     id: number;
@@ -88,9 +89,9 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
                     <h1 className="text-2xl font-semibold">Kelola Game</h1>
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
+                        className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition inline-flex items-center gap-1.5"
                     >
-                        {showForm ? 'Batal' : '+ Tambah Game'}
+                        {showForm ? 'Batal' : <><Plus className="w-4 h-4" /> Tambah Game</>}
                     </button>
                 </div>
 
@@ -200,7 +201,9 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-2xl">🎮</div>
+                                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                    <Gamepad2 className="w-6 h-6" />
+                                                </div>
                                             )}
                                         </div>
                                         <label
@@ -211,7 +214,7 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
                                             {uploadingId === game.id ? (
                                                 <span className="text-white text-xs">...</span>
                                             ) : (
-                                                <span className="text-white text-xs font-bold">📷</span>
+                                                <Camera className="w-4 h-4 text-white" />
                                             )}
                                         </label>
                                         <input
@@ -239,8 +242,9 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
                                             </p>
                                         )}
                                         {!game.image && (
-                                            <p className="text-xs text-amber-500 mt-0.5">
-                                                ⚠ Belum ada gambar — hover foto untuk upload
+                                            <p className="text-xs text-amber-500 mt-0.5 inline-flex items-center gap-1">
+                                                <AlertTriangle className="w-3 h-3" />
+                                                Belum ada gambar — hover foto untuk upload
                                             </p>
                                         )}
                                     </div>

@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
+import { Gamepad2 } from 'lucide-react';
 
 interface NewsItem {
     id: number;
@@ -107,7 +108,7 @@ export default function NewsIndex({ news }: Props) {
                                 className="w-full h-full object-contain"
                             />
                         ) : (
-                            <span className="text-6xl">🎮</span>
+                            <Gamepad2 className="w-16 h-16 text-white/40" />
                         )}
                     </div>
                     <div className="p-6">
@@ -146,7 +147,7 @@ export default function NewsIndex({ news }: Props) {
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <span className="text-4xl">🎮</span>
+                                    <Gamepad2 className="w-10 h-10 text-white/40" />
                                 )}
                             </div>
                             <div className="p-4">

@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
+import {
+    Zap, Headset, Globe, ClipboardList, AlertTriangle, ArrowLeft,
+    Gamepad2, Check, Package, Landmark, Smartphone, QrCode,
+    Store, CreditCard, ShoppingCart, Loader2,
+    type LucideIcon,
+} from 'lucide-react';
 
 interface Product {
     id: number;
@@ -25,10 +31,10 @@ declare global {
     }
 }
 
-const BADGES = [
-    { icon: '⚡', label: 'Proses 1-60 Detik' },
-    { icon: '🎧', label: 'Support 09.00–21.00 WIB' },
-    { icon: '🌏', label: 'Region Indonesia & Global' },
+const BADGES: { icon: LucideIcon; label: string }[] = [
+    { icon: Zap, label: 'Proses 1-60 Detik' },
+    { icon: Headset, label: 'Support 09.00–21.00 WIB' },
+    { icon: Globe, label: 'Region Indonesia & Global' },
 ];
 
 const STEPS = [
@@ -40,39 +46,39 @@ const STEPS = [
 ];
 
 // Grup metode pembayaran
-const PAYMENT_GROUPS = [
+const PAYMENT_GROUPS: { key: string; label: string; icon: LucideIcon; desc: string; logos: string[] }[] = [
     {
         key: 'bank_transfer',
         label: 'Transfer Bank',
-        icon: '🏦',
+        icon: Landmark,
         desc: 'BCA, BNI, BRI, Mandiri, dll',
         logos: ['BCA', 'BNI', 'BRI', 'Mandiri'],
     },
     {
         key: 'ewallet',
         label: 'E-Wallet',
-        icon: '📱',
+        icon: Smartphone,
         desc: 'GoPay, ShopeePay, OVO, Dana',
         logos: ['GoPay', 'ShopeePay', 'OVO', 'Dana'],
     },
     {
         key: 'qris',
         label: 'QRIS',
-        icon: '📷',
+        icon: QrCode,
         desc: 'Scan QR dari semua aplikasi',
         logos: ['QRIS'],
     },
     {
         key: 'convenience_store',
         label: 'Minimarket',
-        icon: '🏪',
+        icon: Store,
         desc: 'Indomaret & Alfamart',
         logos: ['Indomaret', 'Alfamart'],
     },
     {
         key: 'credit_card',
         label: 'Kartu Kredit',
-        icon: '💳',
+        icon: CreditCard,
         desc: 'Visa, Mastercard, JCB',
         logos: ['Visa', 'Mastercard'],
     },
@@ -187,7 +193,9 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                             <img src={`/storage/${game.image}`} alt={game.name}
                                 className="w-28 h-28 md:w-36 md:h-36 rounded-2xl object-cover shadow-2xl ring-4 ring-white/10" />
                         ) : (
-                            <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-white/10 flex items-center justify-center text-5xl shadow-xl">🎮</div>
+                            <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl">
+                                <Gamepad2 className="w-12 h-12 md:w-16 md:h-16 text-white/70" />
+                            </div>
                         )}
                     </div>
                     <div className="text-center md:text-left">
@@ -203,7 +211,8 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                             {BADGES.map((b) => (
                                 <span key={b.label}
                                     className="flex items-center gap-1.5 bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-full border border-white/10">
-                                    {b.icon} {b.label}
+                                    <b.icon className="w-3.5 h-3.5" />
+                                    {b.label}
                                 </span>
                             ))}
                         </div>
@@ -213,9 +222,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
 
             {/* BACK */}
             <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-6">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+                <ArrowLeft className="w-4 h-4" />
                 Kembali ke Beranda
             </Link>
 
@@ -224,8 +231,11 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
 
                 {/* LEFT — Guide */}
                 <div className="lg:w-72 flex-shrink-0">
-                    <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm sticky top-4">
-                        <h3 className="font-bold text-slate-800 mb-4 text-sm">📋 Cara Top Up {game.name}</h3>
+                    <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm sticky top-24">
+                        <h3 className="font-bold text-slate-800 mb-4 text-sm flex items-center gap-2">
+                            <ClipboardList className="w-4 h-4 text-cyan-500" />
+                            Cara Top Up {game.name}
+                        </h3>
                         <ol className="space-y-3">
                             {STEPS.map((step, i) => (
                                 <li key={i} className="flex gap-3 items-start">
@@ -239,7 +249,10 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                         </ol>
                         {needsServer && (
                             <div className="mt-5 pt-4 border-t border-slate-100">
-                                <p className="text-xs text-slate-400 font-medium mb-1">⚠️ Catatan</p>
+                                <p className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1.5">
+                                    <AlertTriangle className="w-3.5 h-3.5" />
+                                    Catatan
+                                </p>
                                 <p className="text-xs text-slate-500 leading-relaxed">
                                     Jangan gabungkan nomor ID dan Server dalam satu kolom!
                                 </p>
@@ -304,7 +317,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
 
                         {game.products.length === 0 ? (
                             <div className="text-center py-10 text-slate-400">
-                                <div className="text-4xl mb-3">📦</div>
+                                <Package className="w-10 h-10 mx-auto mb-3" />
                                 <p className="font-medium">Belum ada paket tersedia</p>
                             </div>
                         ) : (
@@ -323,9 +336,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                         >
                                             {isSelected && (
                                                 <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center">
-                                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                    </svg>
+                                                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
                                                 </span>
                                             )}
                                             <div className="text-2xl mb-2">💎</div>
@@ -374,9 +385,9 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                             </div>
 
                                             {/* Icon + Label */}
-                                            <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-xl"
+                                            <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
                                                 style={{ background: isSelected ? 'rgba(6,182,212,0.1)' : '#f8fafc' }}>
-                                                {group.icon}
+                                                <group.icon className={`w-5 h-5 ${isSelected ? 'text-cyan-600' : 'text-slate-500'}`} />
                                             </div>
 
                                             <div className="flex-1 min-w-0">
@@ -427,8 +438,9 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                 </div>
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-slate-500">Metode</span>
-                                    <span className="font-semibold text-slate-800">
-                                        {selectedPaymentGroup?.icon} {selectedPaymentGroup?.label}
+                                    <span className="font-semibold text-slate-800 inline-flex items-center gap-1.5">
+                                        {selectedPaymentGroup && <selectedPaymentGroup.icon className="w-4 h-4" />}
+                                        {selectedPaymentGroup?.label}
                                     </span>
                                 </div>
                                 <div className="border-t border-slate-200 pt-2.5 flex items-center justify-between">
@@ -442,16 +454,18 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                             <button
                                 onClick={handleOrder}
                                 disabled={loading || !canPay || !snapReady}
-                                className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 hover:shadow-lg active:scale-[0.98]"
+                                className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
                                 style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}
                             >
-                                {!snapReady
-                                    ? '⏳ Memuat payment gateway...'
-                                    : !canPay
-                                    ? '⚠️ Isi ID akun game terlebih dahulu'
-                                    : loading
-                                    ? '⏳ Memproses...'
-                                    : `🛒 Pesan Sekarang — ${formatPrice(selectedProduct.price)}`}
+                                {!snapReady ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Memuat payment gateway...</>
+                                ) : !canPay ? (
+                                    <><AlertTriangle className="w-4 h-4" /> Isi ID akun game terlebih dahulu</>
+                                ) : loading ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
+                                ) : (
+                                    <><ShoppingCart className="w-4 h-4" /> Pesan Sekarang — {formatPrice(selectedProduct.price)}</>
+                                )}
                             </button>
 
                             {!canPay && (

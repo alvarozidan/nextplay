@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
+import { X, Newspaper } from 'lucide-react';
 
 interface NewsItem {
     id: number;
@@ -100,10 +101,10 @@ function ImagePreview({ file, existingUrl }: { file: File | null; existingUrl?: 
                     <button
                         type="button"
                         onClick={() => setShowFull(false)}
-                        className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition"
+                        className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
                         aria-label="Tutup"
                     >
-                        ✕
+                        <X className="w-4 h-4" />
                     </button>
                     <img
                         src={src}
@@ -374,7 +375,9 @@ export default function AdminNewsIndex({ news, games }: Props) {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-2xl">📰</div>
+                                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                <Newspaper className="w-6 h-6" />
+                                            </div>
                                         )}
                                     </Link>
 

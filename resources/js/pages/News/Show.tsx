@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
+import { ArrowLeft, Gamepad2 } from 'lucide-react';
 
 interface NewsDetail {
     id: number;
@@ -45,8 +46,9 @@ export default function NewsShow({ news, related }: Props) {
         <PublicLayout>
             <Head title={`${news.title} — NextPlay`} />
 
-            <Link href="/news" className="text-sm text-muted-foreground hover:text-foreground transition mb-4 inline-block">
-                ← Kembali ke Berita
+            <Link href="/news" className="text-sm text-muted-foreground hover:text-foreground transition mb-4 inline-flex items-center gap-1.5">
+                <ArrowLeft className="w-4 h-4" />
+                Kembali ke Berita
             </Link>
 
             <article>
@@ -75,7 +77,7 @@ export default function NewsShow({ news, related }: Props) {
                             className="w-full h-full object-contain"
                         />
                     ) : (
-                        <span className="text-6xl">🎮</span>
+                        <Gamepad2 className="w-16 h-16 text-white/40" />
                     )}
                 </div>
 
@@ -106,7 +108,7 @@ export default function NewsShow({ news, related }: Props) {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <span className="text-4xl">🎮</span>
+                                        <Gamepad2 className="w-10 h-10 text-white/40" />
                                     )}
                                 </div>
                                 <div className="p-4">
