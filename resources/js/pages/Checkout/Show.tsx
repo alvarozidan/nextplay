@@ -113,6 +113,28 @@ export default function CheckoutShow({ product, client_key }: Props) {
         };
     }, [client_key]);
 
+    // Beri tahu backend bahwa order ini gagal/dibatalkan supaya statusnya
+    // tidak nyangkut selamanya di "pending" (menunggu pembayaran) di
+    // riwayat transaksi. Order yang sudah 'paid' tidak akan terpengaruh,
+    // karena endpoint ini hanya mengubah order yang masih 'pending'.
+    const cancelOrder = (orderId: number | string) => {
+        const csrfToken =
+            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        fetch(`/orders/${orderId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            keepalive: true,
+        }).catch(() => {
+            // Diamkan saja kalau request cancel gagal terkirim (mis. user
+            // langsung menutup tab). Order tetap akan otomatis kedaluwarsa
+            // lewat scheduled command ExpirePendingOrders.
+        });
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!data.game_user_id || !data.payment_group) return;
@@ -152,9 +174,13 @@ export default function CheckoutShow({ product, client_key }: Props) {
                     window.location.href = '/';
                 },
                 onError: () => {
-                    window.location.href = '/';
+                    cancelOrder(order_id);
+                    alert('Pembayaran gagal / terjadi kesalahan. Silakan coba lagi.');
+                    setSnapLoading(false);
                 },
                 onClose: () => {
+                    // User menutup popup tanpa menyelesaikan pembayaran.
+                    cancelOrder(order_id);
                     setSnapLoading(false);
                 },
             });

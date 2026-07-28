@@ -31,6 +31,26 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Dipanggil dari frontend (onError / onClose Snap) saat pembayaran
+     * gagal atau dibatalkan oleh user, supaya order tidak "menumpuk"
+     * selamanya dengan status pending di riwayat transaksi.
+     *
+     * Sengaja tidak diletakkan di belakang middleware 'auth' karena
+     * checkout juga bisa dilakukan oleh guest (lihat CheckoutController).
+     * Hanya order yang statusnya masih 'pending' yang bisa diubah, jadi
+     * order yang sudah 'paid'/'processing'/'completed' tidak akan pernah
+     * ter-overwrite lewat endpoint ini.
+     */
+    public function cancel(Order $order)
+    {
+        if ($order->status === 'pending') {
+            $order->update(['status' => 'failed']);
+        }
+
+        return response()->json(['ok' => true, 'status' => $order->status]);
+    }
+
     public function destroy(Order $order)
     {
         abort_if($order->user_id !== auth()->id(), 403);

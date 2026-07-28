@@ -20,6 +20,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });
 
+// Tidak diletakkan di dalam middleware 'auth' karena checkout juga bisa
+// dilakukan oleh guest, jadi order guest yang gagal/dibatalkan pun harus
+// tetap bisa di-cancel dari sisi frontend (onError / onClose Snap).
+Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
