@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Midtrans\Config;
@@ -31,6 +33,8 @@ class CheckoutController extends Controller
 
     public function show(Product $product)
     {
+        abort_if(!$product->is_active, 404);
+
         $product->load('game');
 
         return Inertia::render('Checkout/Show', [
@@ -53,6 +57,8 @@ class CheckoutController extends Controller
 
         $product = Product::findOrFail($request->product_id);
 
+        abort_if(!$product->is_active, 404);
+
         $customerName  = $user?->name  ?? $request->guest_name;
         $customerEmail = $user?->email ?? $request->guest_email;
 
@@ -64,6 +70,7 @@ class CheckoutController extends Controller
             'payment_method' => $request->payment_group ?? 'midtrans',
             'guest_name'     => $user ? null : $request->guest_name,
             'guest_email'    => $user ? null : $request->guest_email,
+            'cancel_token'   => Str::random(40),
         ]);
 
         $order->items()->create([
@@ -95,13 +102,27 @@ class CheckoutController extends Controller
             $params['enabled_payments'] = self::PAYMENT_METHODS[$request->payment_group];
         }
 
-        $snapToken = Snap::getSnapToken($params);
+        try {
+            $snapToken = Snap::getSnapToken($params);
+        } catch (\Throwable $e) {
+            Log::error('Midtrans getSnapToken gagal', [
+                'order_id' => $order->id,
+                'error'    => $e->getMessage(),
+            ]);
+
+            $order->update(['status' => 'failed']);
+
+            return response()->json([
+                'message' => 'Gagal menghubungi payment gateway. Coba lagi dalam beberapa saat.',
+            ], 502);
+        }
 
         $order->update(['snap_token' => $snapToken]);
 
         return response()->json([
-            'snap_token' => $snapToken,
-            'order_id'   => $order->id,
+            'snap_token'   => $snapToken,
+            'order_id'     => $order->id,
+            'cancel_token' => $order->cancel_token,
         ]);
     }
 }
