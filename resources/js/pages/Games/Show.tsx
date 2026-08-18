@@ -22,6 +22,8 @@ interface Game {
     description?: string;
     developer?: string;
     image: string | null;
+    currency_name: string;
+    currency_icon: string;
     products: Product[];
 }
 
@@ -109,8 +111,9 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
     const [selectedProduct, setSelectedProduct]       = useState<Product | null>(null);
     const [selectedPayment, setSelectedPayment]       = useState<string | null>(null);
 
-    const needsServer = game.slug.toLowerCase().includes('mobile-legend') ||
-                        game.slug.toLowerCase().includes('mobilelegend');
+    const needsServer =
+        game.slug.toLowerCase().replace(/[\s-]/g, '').includes('mobilelegend') ||
+        game.name.toLowerCase().replace(/[\s-]/g, '').includes('mobilelegend');
 
     const gameUserId = needsServer && server.trim()
         ? `${userId.trim()}(${server.trim()})`
@@ -339,12 +342,12 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                                     <Check className="w-3 h-3 text-white" strokeWidth={3} />
                                                 </span>
                                             )}
-                                            <div className="text-2xl mb-2">💎</div>
+                                            <div className="text-2xl mb-2">{game.currency_icon || '💎'}</div>
                                             <p className={`font-semibold text-sm leading-tight mb-0.5 transition-colors ${isSelected ? 'text-cyan-600' : 'text-slate-800 group-hover:text-cyan-600'}`}>
                                                 {product.name}
                                             </p>
                                             <p className="text-xs text-slate-400 mb-3">
-                                                {product.diamond_amount > 0 ? `${product.diamond_amount} diamond` : ''}
+                                                {product.diamond_amount > 0 ? `${product.diamond_amount} ${game.currency_name || 'Diamond'}` : ''}
                                             </p>
                                             <div className="inline-flex items-center text-xs font-bold text-white px-2.5 py-1 rounded-full"
                                                 style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>
@@ -432,7 +435,9 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                     <span className="font-semibold text-slate-800">
                                         {selectedProduct.name}
                                         {selectedProduct.diamond_amount > 0 && (
-                                            <span className="text-slate-400 font-normal ml-1">({selectedProduct.diamond_amount} 💎)</span>
+                                            <span className="text-slate-400 font-normal ml-1">
+                                                ({selectedProduct.diamond_amount} {game.currency_icon || '💎'})
+                                            </span>
                                         )}
                                     </span>
                                 </div>

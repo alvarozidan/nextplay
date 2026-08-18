@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Game extends Model
 {
-    protected $fillable = ['name', 'slug', 'developer', 'description', 'image', 'is_active'];
+    protected $fillable = ['name', 'slug', 'developer', 'description', 'image', 'currency_name', 'currency_icon', 'is_active'];
 
     protected $casts = ['is_active' => 'boolean'];
 

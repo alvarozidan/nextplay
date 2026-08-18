@@ -1,8 +1,8 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 import {
     Menu, X, Gamepad2, ShoppingBag, LogIn,
-    Newspaper, ShieldCheck, ChevronDown,
+    Newspaper, ShieldCheck, ChevronDown, Search,
     LayoutDashboard, Package, ClipboardList, Trophy, FileBarChart, House
 } from 'lucide-react';
 import {
@@ -39,8 +39,15 @@ export default function PublicNavbar() {
     const getInitials = useInitials();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mobileAdminOpen, setMobileAdminOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState('');
 
     const isAdmin = auth?.user?.role === 'admin';
+
+    function handleSearchSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        router.get('/', searchValue.trim() ? { search: searchValue.trim() } : {});
+        setMobileOpen(false);
+    }
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -100,6 +107,20 @@ export default function PublicNavbar() {
                     )}
                 </div>
 
+                {/* Search Box — Desktop */}
+                <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center flex-1 max-w-xs">
+                    <div className="relative w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
+                            placeholder="Cari game..."
+                            className="w-full rounded-lg border border-border bg-muted/40 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:bg-background transition-all"
+                        />
+                    </div>
+                </form>
+
                 {/* Right Side — Avatar / Login */}
                 <div className="ml-auto flex items-center gap-3">
                     {auth?.user ? (
@@ -144,6 +165,18 @@ export default function PublicNavbar() {
             {/* Mobile Menu */}
             {mobileOpen && (
                 <div className="md:hidden border-t border-border px-4 py-4 space-y-1 bg-background">
+                    {/* Search Box — Mobile */}
+                    <form onSubmit={handleSearchSubmit} className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
+                            placeholder="Cari game..."
+                            className="w-full rounded-lg border border-border bg-muted/40 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:bg-background transition-all"
+                        />
+                    </form>
+
                     {navLinks.map(({ href, label, icon: Icon }) => (
                         <Link
                             key={href}

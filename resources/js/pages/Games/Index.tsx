@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import { Search, ChevronLeft, ChevronRight, Zap, Shield, Globe, Flame, Sparkles, Swords, Gamepad2, type LucideIcon } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Zap, Shield, ShieldCheck, Globe, Flame, Sparkles, Swords, Gamepad2, type LucideIcon } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 
 interface Game {
@@ -13,6 +13,7 @@ interface Game {
 
 interface Props {
     games: Game[];
+    search?: string;
 }
 
 // Slide data — ganti src dengan URL banner asli kamu, atau simpan di public/banners/
@@ -56,6 +57,13 @@ const TRUST_BADGES = [
     { icon: <Zap className="w-4 h-4" />, label: 'Proses 1–60 Detik' },
     { icon: <Shield className="w-4 h-4" />, label: 'Transaksi Aman' },
     { icon: <Globe className="w-4 h-4" />, label: 'Indonesia & Global' },
+];
+
+const WHY_US: { icon: LucideIcon; title: string; desc: string }[] = [
+    { icon: Zap, title: 'Proses Instan', desc: 'Item masuk otomatis ke akun kamu dalam hitungan detik setelah pembayaran berhasil.' },
+    { icon: Shield, title: 'Transaksi Aman', desc: 'Sistem pembayaran terenkripsi dan terpercaya, data kamu terlindungi.' },
+    { icon: Sparkles, title: 'Harga Bersahabat', desc: 'Harga kompetitif untuk semua nominal, tanpa biaya tersembunyi.' },
+    { icon: Globe, title: 'Support Responsif', desc: 'Tim support siap membantu setiap hari lewat WhatsApp maupun live chat.' },
 ];
 
 function HeroBanner({ games }: { games: Game[] }) {
@@ -199,8 +207,8 @@ function HeroBanner({ games }: { games: Game[] }) {
     );
 }
 
-export default function GamesIndex({ games }: Props) {
-    const [query, setQuery] = useState('');
+export default function GamesIndex({ games, search }: Props) {
+    const [query, setQuery] = useState(search ?? '');
 
     const filtered = games.filter((g) =>
         g.name.toLowerCase().includes(query.toLowerCase())
@@ -288,6 +296,31 @@ export default function GamesIndex({ games }: Props) {
                     ))}
                 </div>
             )}
+
+            {/* Kenapa Pilih Kami */}
+            <div className="mt-16">
+                <div className="mb-6 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-cyan-500" />
+                    <h2 className="text-lg font-semibold uppercase tracking-wide">Kenapa Pilih NextPlay</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {WHY_US.map((item) => (
+                        <div
+                            key={item.title}
+                            className="rounded-2xl border border-border bg-background p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                        >
+                            <div
+                                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                                style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}
+                            >
+                                <item.icon className="w-5 h-5 text-white" />
+                            </div>
+                            <p className="text-sm font-semibold mb-1">{item.title}</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </PublicLayout>
     );
 }

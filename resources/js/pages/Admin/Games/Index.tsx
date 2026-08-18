@@ -11,6 +11,8 @@ interface Game {
     developer: string | null;
     description: string | null;
     image: string | null;
+    currency_name: string;
+    currency_icon: string;
     is_active: boolean;
     products_count: number;
 }
@@ -22,18 +24,22 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
 
     // Form tambah game baru
     const { data, setData, post, processing, errors, reset } = useForm({
-        name:        '',
-        slug:        '',
-        developer:   '',
-        description: '',
-        image:       null as File | null,
+        name:           '',
+        slug:           '',
+        developer:      '',
+        description:    '',
+        currency_name:  'Diamond',
+        currency_icon:  '💎',
+        image:          null as File | null,
     });
 
-    // Form edit inline (developer + description saja)
+    // Form edit inline (developer + description + mata uang)
     const editForm = useForm({
-        name:        '',
-        developer:   '',
-        description: '',
+        name:           '',
+        developer:      '',
+        description:    '',
+        currency_name:  '',
+        currency_icon:  '',
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -68,9 +74,11 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
     function startEdit(game: Game) {
         setEditingId(game.id);
         editForm.setData({
-            name:        game.name,
-            developer:   game.developer ?? '',
-            description: game.description ?? '',
+            name:           game.name,
+            developer:      game.developer ?? '',
+            description:    game.description ?? '',
+            currency_name:  game.currency_name ?? 'Diamond',
+            currency_icon:  game.currency_icon ?? '💎',
         });
     }
 
@@ -161,6 +169,32 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
                             {errors.description && <p className="text-destructive text-xs mt-1">{errors.description}</p>}
                         </div>
 
+                        {/* Mata Uang */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Nama Mata Uang</label>
+                                <input
+                                    type="text"
+                                    value={data.currency_name}
+                                    onChange={e => setData('currency_name', e.target.value)}
+                                    placeholder="contoh: Diamond, UC, VP"
+                                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                {errors.currency_name && <p className="text-destructive text-xs mt-1">{errors.currency_name}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Ikon Mata Uang</label>
+                                <input
+                                    type="text"
+                                    value={data.currency_icon}
+                                    onChange={e => setData('currency_icon', e.target.value)}
+                                    placeholder="contoh: 💎"
+                                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                {errors.currency_icon && <p className="text-destructive text-xs mt-1">{errors.currency_icon}</p>}
+                            </div>
+                        </div>
+
                         {/* Gambar */}
                         <div>
                             <label className="block text-sm font-medium mb-1">Gambar Game</label>
@@ -235,6 +269,7 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
                                         <p className="text-xs text-muted-foreground">
                                             {game.slug} · {game.products_count} produk
                                             {game.developer && ` · ${game.developer}`}
+                                            {' · '}{game.currency_icon} {game.currency_name}
                                         </p>
                                         {game.description && (
                                             <p className="text-xs text-muted-foreground/80 mt-0.5 line-clamp-1">
@@ -309,6 +344,28 @@ export default function AdminGameIndex({ games }: { games: Game[] }) {
                                                 placeholder="Deskripsi singkat game ini..."
                                                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                                             />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-medium mb-1">Nama Mata Uang</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.data.currency_name}
+                                                    onChange={e => editForm.setData('currency_name', e.target.value)}
+                                                    placeholder="contoh: Diamond, UC, VP"
+                                                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium mb-1">Ikon Mata Uang</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.data.currency_icon}
+                                                    onChange={e => editForm.setData('currency_icon', e.target.value)}
+                                                    placeholder="contoh: 💎"
+                                                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                                />
+                                            </div>
                                         </div>
                                         <div className="flex gap-2">
                                             <button

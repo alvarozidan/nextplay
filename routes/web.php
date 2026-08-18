@@ -61,3 +61,4 @@ Route::get('/checkout/{product}', [CheckoutController::class, 'show'])->name('ch
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
 require __DIR__.'/settings.php';
+
