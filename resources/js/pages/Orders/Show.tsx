@@ -7,6 +7,7 @@ import {
 
 interface Order {
     id: number;
+    invoice_number: string;
     game_user_id: string;
     status: string;
     total_price: number;
@@ -44,7 +45,7 @@ export default function OrderShow({ order }: { order: Order }) {
 
     return (
         <PublicLayout>
-            <Head title={`Order #${order.id}`} />
+            <Head title={`Order ${order.invoice_number}`} />
 
             <div className="max-w-xl mx-auto px-2">
                 {/* Back */}
@@ -67,8 +68,8 @@ export default function OrderShow({ order }: { order: Order }) {
                 {/* Order ID + Date */}
                 <div className="flex items-center justify-between mb-5">
                     <div>
-                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-0.5">ID Transaksi</p>
-                        <p className="font-bold text-slate-800 text-lg">#{order.id}</p>
+                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-0.5">Nomor Invoice</p>
+                        <p className="font-bold text-slate-800 text-lg font-mono">{order.invoice_number}</p>
                     </div>
                     <div className="text-right">
                         <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-0.5">Tanggal</p>

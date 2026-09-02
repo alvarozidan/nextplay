@@ -10,6 +10,7 @@ import {
 
 interface Order {
     id: number;
+    invoice_number: string;
     status: string;
     total_price: number;
     payment_method: string;
@@ -116,7 +117,7 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                                 <span className="text-slate-200 text-xs">·</span>
                                                 <span className="text-xs text-slate-400">{time}</span>
                                                 <span className="text-slate-200 text-xs">·</span>
-                                                <span className="text-xs text-slate-400">#{order.id}</span>
+                                                <span className="text-xs text-slate-400 font-mono">{order.invoice_number}</span>
                                             </div>
                                         </div>
 

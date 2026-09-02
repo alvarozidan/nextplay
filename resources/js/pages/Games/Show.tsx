@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
 import {
     Zap, Headset, Globe, ClipboardList, AlertTriangle, ArrowLeft,
@@ -22,8 +22,6 @@ interface Game {
     description?: string;
     developer?: string;
     image: string | null;
-    currency_name: string;
-    currency_icon: string;
     products: Product[];
 }
 
@@ -44,7 +42,7 @@ const STEPS = [
     'Pilih nominal yang diinginkan',
     'Pilih metode pembayaran',
     'Klik tombol Pesan Sekarang',
-    'Item masuk otomatis ke akunmu',
+    'Isi kontak (khusus belum login)',
 ];
 
 // Grup metode pembayaran
@@ -104,22 +102,31 @@ const LOGO_COLORS: Record<string, string> = {
 };
 
 export default function GameShow({ game, client_key }: { game: Game; client_key: string }) {
+    const { auth } = usePage().props as any;
+
     const [userId, setUserId]           = useState('');
     const [server, setServer]           = useState('');
+    const [guestName, setGuestName]     = useState('');
+    const [guestEmail, setGuestEmail]   = useState('');
     const [snapReady, setSnapReady]     = useState(false);
     const [loading, setLoading]         = useState(false);
     const [selectedProduct, setSelectedProduct]       = useState<Product | null>(null);
     const [selectedPayment, setSelectedPayment]       = useState<string | null>(null);
 
-    const needsServer =
-        game.slug.toLowerCase().replace(/[\s-]/g, '').includes('mobilelegend') ||
-        game.name.toLowerCase().replace(/[\s-]/g, '').includes('mobilelegend');
+    const needsServer = game.slug.toLowerCase().includes('mobile-legend') ||
+                        game.slug.toLowerCase().includes('mobilelegend');
 
     const gameUserId = needsServer && server.trim()
         ? `${userId.trim()}(${server.trim()})`
         : userId.trim();
 
-    const canPay = userId.trim() !== '' && (!needsServer || server.trim() !== '');
+    // Kalau belum login, backend mewajibkan guest_name & guest_email —
+    // jadi keduanya juga harus diisi supaya tombol bayar aktif.
+    const isGuestValid = auth?.user
+        ? true
+        : guestName.trim() !== '' && guestEmail.trim() !== '';
+
+    const canPay = userId.trim() !== '' && (!needsServer || server.trim() !== '') && isGuestValid;
 
     const formatPrice = (price: number) =>
         new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
@@ -138,7 +145,14 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
 
     const handleOrder = async () => {
         if (!selectedProduct || !selectedPayment) return;
-        if (!canPay) { alert('Mohon isi ID akun game kamu terlebih dahulu.'); return; }
+        if (!canPay) {
+            alert(
+                auth?.user
+                    ? 'Mohon isi ID akun game kamu terlebih dahulu.'
+                    : 'Mohon isi ID akun game serta nama & email kamu terlebih dahulu.'
+            );
+            return;
+        }
         if (!snapReady || !window.snap) { alert('Payment gateway belum siap, coba lagi sebentar.'); return; }
 
         setLoading(true);
@@ -151,9 +165,28 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                     product_id:    selectedProduct.id,
                     game_user_id:  gameUserId,
                     payment_group: selectedPayment,
+                    guest_name:    guestName,
+                    guest_email:   guestEmail,
                 }),
             });
-            const { snap_token, order_id } = await res.json();
+
+            const body = await res.json();
+
+            if (!res.ok) {
+                // Backend menolak (mis. validasi guest_name/guest_email gagal,
+                // atau Midtrans error). Tampilkan pesan asli dari server,
+                // jangan lanjut panggil snap.pay dengan token kosong.
+                const firstError = body.errors ? Object.values(body.errors)[0] : null;
+                alert(
+                    (Array.isArray(firstError) ? firstError[0] : null) ??
+                    body.message ??
+                    'Gagal memulai pembayaran, coba lagi.'
+                );
+                setLoading(false);
+                return;
+            }
+
+            const { snap_token, order_id } = body;
 
             window.snap.pay(snap_token, {
                 onSuccess: async () => {
@@ -274,6 +307,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                 style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>1</div>
                             <h2 className="font-bold text-slate-800">Masukkan Data Akun Kamu</h2>
                         </div>
+
                         <div className={`grid gap-3 ${needsServer ? 'grid-cols-2' : 'grid-cols-1'}`}>
                             <div>
                                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
@@ -342,12 +376,12 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                                     <Check className="w-3 h-3 text-white" strokeWidth={3} />
                                                 </span>
                                             )}
-                                            <div className="text-2xl mb-2">{game.currency_icon || '💎'}</div>
+                                            <div className="text-2xl mb-2">💎</div>
                                             <p className={`font-semibold text-sm leading-tight mb-0.5 transition-colors ${isSelected ? 'text-cyan-600' : 'text-slate-800 group-hover:text-cyan-600'}`}>
                                                 {product.name}
                                             </p>
                                             <p className="text-xs text-slate-400 mb-3">
-                                                {product.diamond_amount > 0 ? `${product.diamond_amount} ${game.currency_name || 'Diamond'}` : ''}
+                                                {product.diamond_amount > 0 ? `${product.diamond_amount} diamond` : ''}
                                             </p>
                                             <div className="inline-flex items-center text-xs font-bold text-white px-2.5 py-1 rounded-full"
                                                 style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>
@@ -360,64 +394,62 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                         )}
                     </div>
 
-                    {/* STEP 3 — Metode Pembayaran (muncul setelah nominal dipilih) */}
-                    {selectedProduct && (
-                        <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center flex-shrink-0"
-                                    style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>3</div>
-                                <h2 className="font-bold text-slate-800">Pilih Metode Pembayaran</h2>
-                            </div>
-
-                            <div className="space-y-2.5">
-                                {PAYMENT_GROUPS.map((group) => {
-                                    const isSelected = selectedPayment === group.key;
-                                    return (
-                                        <button
-                                            key={group.key}
-                                            onClick={() => setSelectedPayment(isSelected ? null : group.key)}
-                                            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border-2 text-left transition-all duration-200
-                                                ${isSelected
-                                                    ? 'border-cyan-400 bg-cyan-50 shadow-sm'
-                                                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                                                }`}
-                                        >
-                                            {/* Radio indicator */}
-                                            <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-cyan-500' : 'border-slate-300'}`}>
-                                                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
-                                            </div>
-
-                                            {/* Icon + Label */}
-                                            <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
-                                                style={{ background: isSelected ? 'rgba(6,182,212,0.1)' : '#f8fafc' }}>
-                                                <group.icon className={`w-5 h-5 ${isSelected ? 'text-cyan-600' : 'text-slate-500'}`} />
-                                            </div>
-
-                                            <div className="flex-1 min-w-0">
-                                                <p className={`font-semibold text-sm ${isSelected ? 'text-cyan-700' : 'text-slate-800'}`}>
-                                                    {group.label}
-                                                </p>
-                                                <p className="text-xs text-slate-400 mt-0.5">{group.desc}</p>
-                                            </div>
-
-                                            {/* Logo badges */}
-                                            <div className="flex-shrink-0 flex items-center gap-1.5 flex-wrap justify-end max-w-[140px]">
-                                                {group.logos.map(logo => (
-                                                    <span
-                                                        key={logo}
-                                                        className="text-white text-[10px] font-bold px-2 py-0.5 rounded"
-                                                        style={{ background: LOGO_COLORS[logo] ?? '#64748b' }}
-                                                    >
-                                                        {logo}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                    {/* STEP 3 — Metode Pembayaran (selalu terlihat) */}
+                    <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>3</div>
+                            <h2 className="font-bold text-slate-800">Pilih Metode Pembayaran</h2>
                         </div>
-                    )}
+
+                        <div className="space-y-2.5">
+                            {PAYMENT_GROUPS.map((group) => {
+                                const isSelected = selectedPayment === group.key;
+                                return (
+                                    <button
+                                        key={group.key}
+                                        onClick={() => setSelectedPayment(isSelected ? null : group.key)}
+                                        className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border-2 text-left transition-all duration-200
+                                            ${isSelected
+                                                ? 'border-cyan-400 bg-cyan-50 shadow-sm'
+                                                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                            }`}
+                                    >
+                                        {/* Radio indicator */}
+                                        <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-cyan-500' : 'border-slate-300'}`}>
+                                            {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
+                                        </div>
+
+                                        {/* Icon + Label */}
+                                        <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
+                                            style={{ background: isSelected ? 'rgba(6,182,212,0.1)' : '#f8fafc' }}>
+                                            <group.icon className={`w-5 h-5 ${isSelected ? 'text-cyan-600' : 'text-slate-500'}`} />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`font-semibold text-sm ${isSelected ? 'text-cyan-700' : 'text-slate-800'}`}>
+                                                {group.label}
+                                            </p>
+                                            <p className="text-xs text-slate-400 mt-0.5">{group.desc}</p>
+                                        </div>
+
+                                        {/* Logo badges */}
+                                        <div className="flex-shrink-0 flex items-center gap-1.5 flex-wrap justify-end max-w-[140px]">
+                                            {group.logos.map(logo => (
+                                                <span
+                                                    key={logo}
+                                                    className="text-white text-[10px] font-bold px-2 py-0.5 rounded"
+                                                    style={{ background: LOGO_COLORS[logo] ?? '#64748b' }}
+                                                >
+                                                    {logo}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
                     {/* STEP 4 — Konfirmasi & Pesan (muncul setelah metode dipilih) */}
                     {selectedProduct && selectedPayment && (
@@ -435,9 +467,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                     <span className="font-semibold text-slate-800">
                                         {selectedProduct.name}
                                         {selectedProduct.diamond_amount > 0 && (
-                                            <span className="text-slate-400 font-normal ml-1">
-                                                ({selectedProduct.diamond_amount} {game.currency_icon || '💎'})
-                                            </span>
+                                            <span className="text-slate-400 font-normal ml-1">({selectedProduct.diamond_amount} 💎)</span>
                                         )}
                                     </span>
                                 </div>
@@ -456,6 +486,83 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                 </div>
                             </div>
 
+                            {/* Untuk user yang sudah login, tombol bayar langsung di sini.
+                                Untuk guest, tombol bayar dipindah ke STEP 5 (setelah isi kontak). */}
+                            {auth?.user && (
+                                <>
+                                    <button
+                                        onClick={handleOrder}
+                                        disabled={loading || !canPay || !snapReady}
+                                        className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
+                                        style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}
+                                    >
+                                        {!snapReady ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> Memuat payment gateway...</>
+                                        ) : !canPay ? (
+                                            <><AlertTriangle className="w-4 h-4" /> Isi ID akun game terlebih dahulu</>
+                                        ) : loading ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
+                                        ) : (
+                                            <><ShoppingCart className="w-4 h-4" /> Pesan Sekarang — {formatPrice(selectedProduct.price)}</>
+                                        )}
+                                    </button>
+
+                                    {!canPay && (
+                                        <p className="text-xs text-amber-600 text-center mt-2">
+                                            Kembali ke langkah 1 dan isi ID akun game kamu.
+                                        </p>
+                                    )}
+                                </>
+                            )}
+
+                            {!auth?.user && (
+                                <p className="text-xs text-slate-400 text-center">
+                                    Lengkapi kontak kamu di langkah 5 untuk menyelesaikan pesanan.
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* STEP 5 — Informasi Kontak (khusus guest / belum login) */}
+                    {!auth?.user && selectedProduct && selectedPayment && (
+                        <div className="bg-white border-2 border-cyan-200 rounded-2xl p-5 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>5</div>
+                                <h2 className="font-bold text-slate-800">Informasi Kontak</h2>
+                            </div>
+
+                            <p className="text-xs text-slate-400 mb-3">
+                                Dipakai untuk mengirim bukti transaksi & keperluan cek status pesanan.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                                        Nama
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={guestName}
+                                        onChange={e => setGuestName(e.target.value)}
+                                        placeholder="Nama kamu"
+                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={guestEmail}
+                                        onChange={e => setGuestEmail(e.target.value)}
+                                        placeholder="Email kamu"
+                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
+                                    />
+                                </div>
+                            </div>
+
                             <button
                                 onClick={handleOrder}
                                 disabled={loading || !canPay || !snapReady}
@@ -465,7 +572,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                                 {!snapReady ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> Memuat payment gateway...</>
                                 ) : !canPay ? (
-                                    <><AlertTriangle className="w-4 h-4" /> Isi ID akun game terlebih dahulu</>
+                                    <><AlertTriangle className="w-4 h-4" /> Lengkapi data terlebih dahulu</>
                                 ) : loading ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
                                 ) : (
@@ -475,7 +582,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
 
                             {!canPay && (
                                 <p className="text-xs text-amber-600 text-center mt-2">
-                                    Kembali ke langkah 1 dan isi ID akun game kamu.
+                                    Lengkapi Nama, Email, serta ID akun game kamu di langkah 1 &amp; 5.
                                 </p>
                             )}
                         </div>

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\TrackOrderController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\Admin;
@@ -60,5 +61,11 @@ Route::post('/midtrans/callback', [MidtransController::class, 'handleNotificatio
 Route::get('/checkout/{product}', [CheckoutController::class, 'show'])->name('checkout.show');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
-require __DIR__.'/settings.php';
+// Cek transaksi publik (tanpa login), cukup pakai nomor invoice.
+// Diberi throttle supaya nomor invoice tidak gampang di-brute-force / di-loop.
+Route::middleware('throttle:20,1')->group(function () {
+    Route::get('/cek-transaksi', [TrackOrderController::class, 'index'])->name('track.index');
+    Route::post('/cek-transaksi', [TrackOrderController::class, 'search'])->name('track.search');
+});
 
+require __DIR__.'/settings.php';
