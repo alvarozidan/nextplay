@@ -8,16 +8,64 @@ use Inertia\Inertia;
 
 class OrderController extends Controller
 {
+    /**
+     * Riwayat transaksi GLOBAL & publik — setiap transaksi dari siapapun
+     * (login maupun guest) tampil di sini sebagai feed aktivitas.
+     *
+     * Untuk transaksi milik orang lain, data yang berpotensi sensitif
+     * (ID akun game, nomor invoice) disamarkan. Kalau viewer login dan
+     * kebetulan pemilik transaksi tersebut, datanya ditampilkan utuh dan
+     * dia bisa masuk ke halaman detail / menghapusnya sendiri.
+     *
+     * Untuk melihat detail transaksi milik sendiri secara lengkap tanpa
+     * login, arahkan user ke fitur "Cek Transaksi" (pakai nomor invoice).
+     */
     public function index()
     {
-        $orders = Order::where('user_id', auth()->id())
-            ->with(['items.product.game'])
+        $viewerId = auth()->id();
+
+        $orders = Order::with(['items.product.game'])
             ->latest()
-            ->get();
+            ->paginate(15)
+            ->withQueryString()
+            ->through(function (Order $order) use ($viewerId) {
+                $isOwn = $viewerId !== null && $order->user_id === $viewerId;
+
+                return [
+                    'id'              => $order->id,
+                    'invoice_number'  => $isOwn ? $order->invoice_number : null,
+                    'status'          => $order->status,
+                    'total_price'     => $order->total_price,
+                    'payment_method'  => $order->payment_method,
+                    'created_at'      => $order->created_at,
+                    'game_user_id'    => $isOwn ? $order->game_user_id : $this->maskGameUserId($order->game_user_id),
+                    'is_own'          => $isOwn,
+                    'items'           => $order->items->map(fn ($item) => [
+                        'product' => [
+                            'name'           => $item->product?->name,
+                            'diamond_amount' => $item->product?->diamond_amount,
+                            'game'           => ['name' => $item->product?->game?->name],
+                        ],
+                    ]),
+                ];
+            });
 
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
         ]);
+    }
+
+    // Sisakan beberapa karakter depan biar tetap "kerasa" identitasnya,
+    // sisanya ditutup titik-titik supaya tidak bisa dipakai orang lain.
+    private function maskGameUserId(?string $gameUserId): ?string
+    {
+        if (!$gameUserId) {
+            return $gameUserId;
+        }
+
+        $visible = min(4, max(1, (int) floor(strlen($gameUserId) / 2)));
+
+        return substr($gameUserId, 0, $visible) . str_repeat('•', max(3, strlen($gameUserId) - $visible));
     }
 
     public function show(Order $order)

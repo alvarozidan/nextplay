@@ -15,8 +15,13 @@ Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('game.sh
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
+// Riwayat transaksi bersifat global & publik (tanpa login) — menampilkan
+// aktivitas transaksi dari SEMUA pengguna sebagai feed. Data sensitif
+// (ID akun game, nomor invoice, dsb) tetap disamarkan untuk transaksi
+// milik orang lain; hanya pemilik transaksi yang melihat datanya utuh.
+Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+
 Route::middleware('auth')->group(function () {
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });

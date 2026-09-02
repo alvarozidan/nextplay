@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {
     Menu, X, Gamepad2, ShoppingBag, LogIn,
     Newspaper, ShieldCheck, ChevronDown, Search,
-    LayoutDashboard, Package, ClipboardList, Trophy, FileBarChart, House
+    LayoutDashboard, Package, ClipboardList, Trophy, FileBarChart, House, Receipt
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -30,6 +30,7 @@ const navLinks = [
     { href: '/', label: 'Beranda', icon: House },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/orders', label: 'Riwayat Transaksi', icon: ShoppingBag },
+    { href: '/cek-transaksi', label: 'Cek Transaksi', icon: Receipt },
     { href: '/news', label: 'Berita Game', icon: Newspaper },
 ];
 
