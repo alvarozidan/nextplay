@@ -31,6 +31,11 @@ Route::middleware('auth')->group(function () {
 // tetap bisa di-cancel dari sisi frontend (onError / onClose Snap).
 Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
+// Halaman invoice publik, langsung dituju setelah checkout (guest maupun
+// login). Diamankan pakai cancel_token di query string sebagai kunci akses,
+// bukan sekadar ID order yang gampang ditebak/di-loop.
+Route::get('/invoice/{order}', [OrderController::class, 'invoice'])->name('orders.invoice');
+
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
 

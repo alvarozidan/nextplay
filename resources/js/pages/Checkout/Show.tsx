@@ -181,10 +181,10 @@ export default function CheckoutShow({ product, client_key }: Props) {
 
             window.snap.pay(snap_token, {
                 onSuccess: () => {
-                    window.location.href = auth.user ? `/orders/${order_id}` : '/';
+                    window.location.href = `/invoice/${order_id}?token=${cancel_token}`;
                 },
                 onPending: () => {
-                    window.location.href = '/';
+                    window.location.href = `/invoice/${order_id}?token=${cancel_token}`;
                 },
                 onError: () => {
                     cancelOrder(order_id, cancel_token);

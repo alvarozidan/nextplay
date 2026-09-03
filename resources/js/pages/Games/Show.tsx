@@ -186,7 +186,7 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                 return;
             }
 
-            const { snap_token, order_id } = body;
+            const { snap_token, order_id, cancel_token } = body;
 
             window.snap.pay(snap_token, {
                 onSuccess: async () => {
@@ -196,10 +196,10 @@ export default function GameShow({ game, client_key }: { game: Game; client_key:
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
                         body: JSON.stringify({ status: 'paid' }),
                     });
-                    window.location.href = '/orders';
+                    window.location.href = `/invoice/${order_id}?token=${cancel_token}`;
                 },
-                onPending: () => { window.location.href = '/orders'; },
-                onError:   () => { window.location.href = '/orders'; },
+                onPending: () => { window.location.href = `/invoice/${order_id}?token=${cancel_token}`; },
+                onError:   () => { window.location.href = `/invoice/${order_id}?token=${cancel_token}`; },
                 onClose:   () => { setLoading(false); },
             });
         } catch (err) {

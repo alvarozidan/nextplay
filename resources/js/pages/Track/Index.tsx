@@ -19,6 +19,7 @@ interface TrackResult {
 
 interface Props {
     result?: TrackResult;
+    invoice_number?: string;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; icon: LucideIcon; spin?: boolean; desc: string }> = {
@@ -29,9 +30,9 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string; ico
     failed:     { label: 'Transaksi Gagal',     color: 'text-red-700',     bg: 'bg-red-50 border-red-200',       icon: XCircle, desc: 'Transaksi gagal / dibatalkan.' },
 };
 
-export default function TrackIndex({ result }: Props) {
+export default function TrackIndex({ result, invoice_number }: Props) {
     const { data, setData, post, processing, errors } = useForm({
-        invoice_number: '',
+        invoice_number: invoice_number ?? '',
     });
 
     const formatPrice = (price: number) =>

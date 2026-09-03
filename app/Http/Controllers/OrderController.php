@@ -108,6 +108,31 @@ class OrderController extends Controller
         return response()->json(['ok' => true, 'status' => $order->status]);
     }
 
+    /**
+     * Halaman invoice publik — bisa diakses guest maupun user login,
+     * langsung setelah checkout berhasil. Sengaja tidak pakai middleware
+     * 'auth' karena guest juga harus bisa melihat invoice-nya sendiri.
+     *
+     * Diamankan dengan cancel_token (bukan sekadar ID order) supaya orang
+     * lain tidak bisa melihat invoice orang lain hanya dengan menebak/
+     * meng-increment ID order di URL.
+     */
+    public function invoice(Request $request, Order $order)
+    {
+        $request->validate(['token' => 'required|string']);
+
+        abort_unless(
+            hash_equals((string) $order->cancel_token, (string) $request->token),
+            403
+        );
+
+        $order->load(['items.product.game']);
+
+        return Inertia::render('Orders/Invoice', [
+            'order' => $order,
+        ]);
+    }
+
     public function destroy(Order $order)
     {
         abort_if($order->user_id !== auth()->id(), 403);
