@@ -24,7 +24,7 @@ interface Order {
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; icon: LucideIcon; spin?: boolean; desc: string }> = {
     pending:    { label: 'Menunggu Pembayaran', color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   icon: Clock, desc: 'Selesaikan pembayaran sesuai metode yang kamu pilih. Halaman ini bisa dibuka lagi kapan saja lewat "Cek Transaksi".' },
-    paid:       { label: 'Pembayaran Diterima', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',     icon: CreditCard, desc: 'Pembayaran berhasil diterima, sedang diproses.' },
+    paid:       { label: 'Pembayaran Sukses', color: 'text-green-700',    bg: 'bg-green-50 border-green-600',     icon: CreditCard, desc: 'Pembayaran berhasil diterima, sedang diproses.' },
     processing: { label: 'Sedang Diproses',     color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-200', icon: Loader2, spin: true, desc: 'Item sedang dikirimkan ke akun game kamu.' },
     completed:  { label: 'Transaksi Selesai',   color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2, desc: 'Item berhasil masuk ke akun game kamu.' },
     failed:     { label: 'Transaksi Gagal',     color: 'text-red-700',     bg: 'bg-red-50 border-red-200',       icon: XCircle, desc: 'Transaksi gagal / dibatalkan.' },

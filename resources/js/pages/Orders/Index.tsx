@@ -34,7 +34,7 @@ interface PaginatedOrders {
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: LucideIcon; spin?: boolean }> = {
     pending:    { label: 'Menunggu',  color: 'bg-amber-100 text-amber-700 ring-amber-200',      icon: Clock },
-    paid:       { label: 'Dibayar',   color: 'bg-blue-100 text-blue-700 ring-blue-200',         icon: CreditCard },
+    paid:       { label: 'Sukses',   color: 'bg-green-100 text-green-700 ring-green-200',         icon: CreditCard },
     processing: { label: 'Diproses', color: 'bg-purple-100 text-purple-700 ring-purple-200',   icon: Loader2, spin: true },
     completed:  { label: 'Selesai',  color: 'bg-emerald-100 text-emerald-700 ring-emerald-200', icon: CheckCircle2 },
     failed:     { label: 'Gagal',    color: 'bg-red-100 text-red-700 ring-red-200',             icon: XCircle },
