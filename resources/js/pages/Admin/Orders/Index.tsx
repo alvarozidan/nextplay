@@ -11,8 +11,9 @@ interface Order {
     game_user_id: string;
     payment_method: string;
     created_at: string;
-    user: { name: string };
-    items: { products: { name: string; game: { name: string } } }[];
+    user: { name: string } | null;
+    guest_name: string | null;
+    items: { product: { name: string; game: { name: string } } }[];
 }
 
 const STATUS_OPTIONS = ['pending', 'paid', 'processing', 'completed', 'failed'] as const;
@@ -39,8 +40,8 @@ function OrderRow({ order }: { order: Order }) {
     };
 
     const status = STATUS_MAP[data.status] ?? { label: data.status, color: 'bg-slate-100 text-slate-600 ring-slate-200', dot: 'bg-slate-400' };
-    const gameName = order.items[0]?.products?.game?.name;
-    const productName = order.items[0]?.products?.name;
+    const gameName = order.items[0]?.product?.game?.name;
+    const productName = order.items[0]?.product?.name;
 
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setData('status', e.target.value);
@@ -65,7 +66,7 @@ function OrderRow({ order }: { order: Order }) {
                         <div className="flex items-center gap-2 flex-wrap mb-0.5">
                             <span className="text-xs font-mono text-slate-400">#{order.id}</span>
                             <span className="text-slate-200 text-xs">·</span>
-                            <span className="font-semibold text-sm text-slate-800">{order.user.name}</span>
+                            <span className="font-semibold text-sm text-slate-800">{order.user?.name ?? order.guest_name ?? 'Guest'}</span>
                         </div>
                         <p className="text-sm text-slate-600 truncate">
                             {gameName ?? '—'}{productName ? ` — ${productName}` : ''}
