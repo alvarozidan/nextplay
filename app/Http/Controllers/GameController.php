@@ -8,12 +8,17 @@ use Inertia\Inertia;
 
 class GameController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $games = Game::where('is_active', true)->get();
+        $search = $request->string('search')->trim()->toString();
+
+        $games = Game::where('is_active', true)
+            ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->get();
 
         return Inertia::render('Games/Index', [
-            'games' => $games,
+            'games'  => $games,
+            'search' => $search,
         ]);
     }
 

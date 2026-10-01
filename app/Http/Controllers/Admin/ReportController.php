@@ -22,7 +22,7 @@ class ReportController extends Controller
             'filters' => $filters,
             'summary' => [
                 'total_orders'  => (clone $query)->count(),
-                'total_revenue' => (clone $query)->where('status', 'completed')->sum('total_price'),
+                'total_revenue' => (clone $query)->whereIn('status', ['paid', 'processing', 'completed'])->sum('total_price'),
             ],
         ]);
     }
@@ -47,7 +47,7 @@ class ReportController extends Controller
             ->with(['user', 'items.product.game'])
             ->get();
 
-        $totalRevenue = $orders->where('status', 'completed')->sum('total_price');
+        $totalRevenue = $orders->whereIn('status', ['paid', 'processing', 'completed'])->sum('total_price');
 
         $pdf = Pdf::loadView('reports.orders-pdf', [
             'orders'       => $orders,

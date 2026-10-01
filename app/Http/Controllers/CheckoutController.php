@@ -47,12 +47,24 @@ class CheckoutController extends Controller
     {
         $user = auth()->user();
 
+        // Kalau user sudah login, frontend tetap mengirim guest_name/guest_email
+        // sebagai string kosong ('') alih-alih tidak mengirimkannya sama sekali.
+        // Laravel 11 tidak lagi otomatis mengubah string kosong jadi null
+        // (middleware ConvertEmptyStringsToNull tidak didaftarkan default lagi),
+        // jadi rule 'email' tetap dicek formatnya walau field-nya tidak wajib
+        // diisi -> selalu gagal validasi (422) khusus untuk user yang login.
+        // Normalisasi ke null di sini supaya rule 'nullable' benar-benar berlaku.
+        $request->merge([
+            'guest_name'  => $request->guest_name ?: null,
+            'guest_email' => $request->guest_email ?: null,
+        ]);
+
         $request->validate([
             'product_id'     => 'required|exists:products,id',
             'game_user_id'   => 'required|string',
             'payment_group'  => 'nullable|string|in:bank_transfer,ewallet,convenience_store,qris,credit_card',
-            'guest_name'     => [Rule::requiredIf(!$user), 'string', 'max:100'],
-            'guest_email'    => [Rule::requiredIf(!$user), 'email'],
+            'guest_name'     => [Rule::requiredIf(!$user), 'nullable', 'string', 'max:100'],
+            'guest_email'    => [Rule::requiredIf(!$user), 'nullable', 'email'],
         ]);
 
         $product = Product::findOrFail($request->product_id);

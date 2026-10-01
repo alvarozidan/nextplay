@@ -15,7 +15,8 @@ interface Order {
     id: number;
     status: string;
     total_price: number;
-    user: { name: string };
+    user: { name: string } | null;
+    guest_name: string | null;
     items: { product: { name: string; game: { name: string } } }[];
     created_at: string;
 }
@@ -64,7 +65,7 @@ export default function AdminDashboard({ stats, recent_orders }: { stats: Stats;
                         {recent_orders.map((order) => (
                             <div key={order.id} className="p-4 flex items-center justify-between">
                                 <div>
-                                    <p className="font-medium text-sm">{order.user.name}</p>
+                                    <p className="font-medium text-sm">{order.user?.name ?? order.guest_name ?? 'Guest'}</p>
                                     <p className="text-xs text-muted-foreground">
                                         {order.items[0]?.product?.game?.name} — {order.items[0]?.product?.name}
                                     </p>

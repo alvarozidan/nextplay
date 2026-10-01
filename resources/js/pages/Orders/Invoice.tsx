@@ -1,8 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
 import {
-    ArrowLeft, Clock, CreditCard, Loader2, CheckCircle2, XCircle, Circle, Gamepad2,
-    type LucideIcon,
+    Clock, CreditCard, Loader2, CheckCircle2, XCircle, Circle, Gamepad2,
+    Copy, Check, Search, type LucideIcon,
 } from 'lucide-react';
 
 interface Order {
@@ -22,14 +23,16 @@ interface Order {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; icon: LucideIcon; spin?: boolean; desc: string }> = {
-    pending:    { label: 'Menunggu Pembayaran', color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   icon: Clock, desc: 'Transaksi menunggu konfirmasi pembayaran.' },
+    pending:    { label: 'Menunggu Pembayaran', color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   icon: Clock, desc: 'Selesaikan pembayaran sesuai metode yang kamu pilih. Halaman ini bisa dibuka lagi kapan saja lewat "Cek Transaksi".' },
     paid:       { label: 'Pembayaran Sukses', color: 'text-green-700',    bg: 'bg-green-50 border-green-600',     icon: CreditCard, desc: 'Pembayaran telah sukses, item berhasil dikirim.' },
     processing: { label: 'Sedang Diproses',     color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-200', icon: Loader2, spin: true, desc: 'Item sedang dikirimkan ke akun game kamu.' },
     completed:  { label: 'Transaksi Selesai',   color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2, desc: 'Item berhasil masuk ke akun game kamu.' },
-    failed:     { label: 'Transaksi Gagal',     color: 'text-red-700',     bg: 'bg-red-50 border-red-200',       icon: XCircle, desc: 'Transaksi gagal. Hubungi support jika kamu sudah membayar.' },
+    failed:     { label: 'Transaksi Gagal',     color: 'text-red-700',     bg: 'bg-red-50 border-red-200',       icon: XCircle, desc: 'Transaksi gagal / dibatalkan.' },
 };
 
-export default function OrderShow({ order }: { order: Order }) {
+export default function OrderInvoice({ order }: { order: Order }) {
+    const [copied, setCopied] = useState(false);
+
     const formatPrice = (price: number) =>
         new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 
@@ -43,16 +46,44 @@ export default function OrderShow({ order }: { order: Order }) {
         label: order.status, color: 'text-slate-700', bg: 'bg-slate-50 border-slate-200', icon: Circle, desc: '',
     };
 
+    const copyInvoiceNumber = () => {
+        navigator.clipboard.writeText(order.invoice_number).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        });
+    };
+
     return (
         <PublicLayout>
-            <Head title={`Order ${order.invoice_number}`} />
+            <Head title={`Invoice ${order.invoice_number}`} />
 
             <div className="max-w-xl mx-auto px-2">
-                {/* Back */}
-                <Link href="/orders" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-6">
-                    <ArrowLeft className="w-4 h-4" />
-                    Riwayat Transaksi
-                </Link>
+                <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
+                        style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}>
+                        <status.icon className={`w-7 h-7 text-white ${status.spin ? 'animate-spin' : ''}`} />
+                    </div>
+                    <h1 className="text-2xl font-extrabold text-slate-800 mb-1">
+                        {order.status === 'pending' ? 'Pesanan Dibuat' : 'Detail Transaksi'}
+                    </h1>
+                    <p className="text-sm text-slate-500">Simpan nomor invoice di bawah untuk mengecek status transaksimu nanti.</p>
+                </div>
+
+                {/* Nomor invoice — paling ditonjolkan, ini yang tadinya tidak kelihatan buat guest */}
+                <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm mb-5 text-center">
+                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1.5">Nomor Invoice</p>
+                    <div className="flex items-center justify-center gap-2">
+                        <p className="font-bold text-slate-800 text-2xl font-mono tracking-wide">{order.invoice_number}</p>
+                        <button
+                            type="button"
+                            onClick={copyInvoiceNumber}
+                            className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                            title="Salin nomor invoice"
+                        >
+                            {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                    </div>
+                </div>
 
                 {/* Status Banner */}
                 <div className={`rounded-2xl border p-5 mb-5 ${status.bg}`}>
@@ -65,12 +96,7 @@ export default function OrderShow({ order }: { order: Order }) {
                     </div>
                 </div>
 
-                {/* Order ID + Date */}
-                <div className="flex items-center justify-between mb-5">
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-0.5">Nomor Invoice</p>
-                        <p className="font-bold text-slate-800 text-lg font-mono">{order.invoice_number}</p>
-                    </div>
+                <div className="flex items-center justify-end mb-5">
                     <div className="text-right">
                         <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-0.5">Tanggal</p>
                         <p className="text-sm font-medium text-slate-600">{formatDate(order.created_at)}</p>
@@ -101,7 +127,7 @@ export default function OrderShow({ order }: { order: Order }) {
                     </div>
                 </div>
 
-                {/* Info Grid */}
+                {/* Info Pembayaran */}
                 <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden mb-4">
                     <div className="px-5 py-3 border-b border-slate-100 bg-slate-50">
                         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Informasi Pembayaran</p>
@@ -124,15 +150,24 @@ export default function OrderShow({ order }: { order: Order }) {
                     </div>
                 </div>
 
-                {/* CTA */}
-                <Link
-                    href="/"
-                    className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-white font-semibold text-sm hover:opacity-90 transition"
-                    style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}
-                >
-                    <Gamepad2 className="w-4 h-4" />
-                    Top Up Lagi
-                </Link>
+                {/* CTA: cek status transaksi (auto-isi nomor invoice) + top up lagi */}
+                <div className="grid grid-cols-2 gap-3">
+                    <Link
+                        href={`/cek-transaksi?invoice_number=${encodeURIComponent(order.invoice_number)}`}
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition"
+                    >
+                        <Search className="w-4 h-4" />
+                        Cek Transaksi
+                    </Link>
+                    <Link
+                        href="/"
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-white font-semibold text-sm hover:opacity-90 transition"
+                        style={{ background: 'linear-gradient(135deg, #1a9fd4, #0a9e7e)' }}
+                    >
+                        <Gamepad2 className="w-4 h-4" />
+                        Top Up Lagi
+                    </Link>
+                </div>
             </div>
         </PublicLayout>
     );

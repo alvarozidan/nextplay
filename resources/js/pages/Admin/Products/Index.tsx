@@ -10,10 +10,10 @@ interface Product {
     diamond_amount: number;
     price: number;
     is_active: boolean;
-    game: { id: number; name: string };
+    game: { id: number; name: string; currency_name?: string; currency_icon?: string };
 }
 
-interface Game { id: number; name: string; }
+interface Game { id: number; name: string; currency_name?: string; currency_icon?: string; }
 
 function formatPrice(price: number) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
@@ -68,7 +68,9 @@ function ProductRow({ product, onDelete }: { product: Product; onDelete: (id: nu
                         className="w-24 border border-cyan-300 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-cyan-400"
                     />
                 ) : (
-                    <span className="text-sm text-slate-600">💎 {product.diamond_amount.toLocaleString()}</span>
+                    <span className="text-sm text-slate-600">
+                        {product.game.currency_icon ?? '💎'} {product.diamond_amount.toLocaleString()}
+                    </span>
                 )}
             </td>
 
@@ -209,7 +211,7 @@ export default function AdminProductsIndex({ products, games }: { products: Prod
                                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Jumlah Diamond</label>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Jumlah (sesuai mata uang game)</label>
                                 <input type="number" value={data.diamond_amount} onChange={e => setData('diamond_amount', e.target.value)}
                                     placeholder="86"
                                     className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400" />
@@ -261,7 +263,7 @@ export default function AdminProductsIndex({ products, games }: { products: Prod
                                 <thead>
                                     <tr className="border-b border-slate-200 bg-slate-50">
                                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Produk</th>
-                                        <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Diamond</th>
+                                        <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Jumlah</th>
                                         <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Harga</th>
                                         <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                                         <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Aksi</th>

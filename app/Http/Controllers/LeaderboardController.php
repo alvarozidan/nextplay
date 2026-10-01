@@ -19,7 +19,7 @@ class LeaderboardController extends Controller
             : 'monthly';
 
         $query = Order::query()
-            ->where('status', 'completed')
+            ->whereIn('status', ['paid', 'processing', 'completed'])
             ->whereNotNull('user_id');
 
         match ($period) {

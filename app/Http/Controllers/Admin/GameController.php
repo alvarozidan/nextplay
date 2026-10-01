@@ -22,14 +22,16 @@ class GameController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'slug'        => 'required|string|unique:games,slug',
-            'developer'   => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'image'       => 'nullable|image|max:2048',
+            'name'           => 'required|string|max:255',
+            'slug'           => 'required|string|unique:games,slug',
+            'developer'      => 'nullable|string|max:255',
+            'description'    => 'nullable|string|max:1000',
+            'currency_name'  => 'nullable|string|max:50',
+            'currency_icon'  => 'nullable|string|max:10',
+            'image'          => 'nullable|image|max:2048',
         ]);
 
-        $data = $request->only('name', 'slug', 'developer', 'description');
+        $data = $request->only('name', 'slug', 'developer', 'description', 'currency_name', 'currency_icon');
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('games', 'public');
@@ -43,18 +45,22 @@ class GameController extends Controller
     public function update(Request $request, Game $game)
     {
         $request->validate([
-            'name'        => 'sometimes|required|string|max:255',
-            'developer'   => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'is_active'   => 'sometimes|boolean',
-            'image'       => 'nullable|image|max:2048',
+            'name'           => 'sometimes|required|string|max:255',
+            'developer'      => 'nullable|string|max:255',
+            'description'    => 'nullable|string|max:1000',
+            'currency_name'  => 'nullable|string|max:50',
+            'currency_icon'  => 'nullable|string|max:10',
+            'is_active'      => 'sometimes|boolean',
+            'image'          => 'nullable|image|max:2048',
         ]);
 
         $data = array_filter([
-            'name'        => $request->input('name'),
-            'developer'   => $request->input('developer'),
-            'description' => $request->input('description'),
-            'is_active'   => $request->has('is_active') ? $request->boolean('is_active') : null,
+            'name'           => $request->input('name'),
+            'developer'      => $request->input('developer'),
+            'description'    => $request->input('description'),
+            'currency_name'  => $request->input('currency_name'),
+            'currency_icon'  => $request->input('currency_icon'),
+            'is_active'      => $request->has('is_active') ? $request->boolean('is_active') : null,
         ], fn($v) => !is_null($v));
 
         if ($request->hasFile('image')) {

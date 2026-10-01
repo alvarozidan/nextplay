@@ -43,6 +43,23 @@ class MidtransController extends Controller
             default                                                       => null,
         };
 
+        // Order yang sudah berada di status final ('paid', 'processing',
+        // 'completed', 'failed') tidak boleh ditimpa balik ke 'pending'.
+        // Tanpa guard ini, webhook 'pending' yang datang terlambat (mis.
+        // notifikasi awal saat VA dibuat) bisa menimpa order yang sudah
+        // di-cancel manual oleh user (lihat OrderController::cancel) atau
+        // yang sudah lunas, sehingga statusnya "nyangkut" balik ke
+        // "Menunggu" padahal seharusnya "Gagal"/"Sukses".
+        $finalStatuses = ['paid', 'processing', 'completed', 'failed'];
+
+        if ($newStatus === 'pending' && in_array($order->status, $finalStatuses, true)) {
+            Log::info('Midtrans: notifikasi pending diabaikan, order sudah final', [
+                'order_id'      => $realOrderId,
+                'current_status'=> $order->status,
+            ]);
+            return response()->json(['message' => 'OK']);
+        }
+
         if ($newStatus && $order->status !== $newStatus) {
             $order->update(['status' => $newStatus]);
             Log::info('Midtrans: status order diupdate', [

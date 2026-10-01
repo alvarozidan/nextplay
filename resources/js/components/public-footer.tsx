@@ -45,7 +45,7 @@ export default function PublicFooter() {
                             <li><Link href="/" className="hover:text-white transition-colors">Beranda</Link></li>
                             <li><Link href="/login" className="hover:text-white transition-colors">Masuk</Link></li>
                             <li><Link href="/register" className="hover:text-white transition-colors">Daftar</Link></li>
-                            <li><Link href="/orders" className="hover:text-white transition-colors">Cek Transaksi</Link></li>
+                            <li><Link href="/cek-transaksi" className="hover:text-white transition-colors">Cek Transaksi</Link></li>
                             <li><Link href="/news" className="hover:text-white transition-colors">Berita Game</Link></li>
                         </ul>
                     </div>
