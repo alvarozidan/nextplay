@@ -8,7 +8,9 @@ class Order extends Model
 {
     protected $fillable = ['user_id', 'game_user_id', 'status', 
                             'total_price', 'payment_method', 'snap_token',
-                            'guest_name', 'guest_email',];
+                            'guest_name', 'guest_email', 'cancel_token',];
+
+    protected $hidden = ['cancel_token'];
 
     protected $casts = ['total_price' => 'decimal:2'];
 

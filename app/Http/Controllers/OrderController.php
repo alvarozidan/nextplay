@@ -42,8 +42,17 @@ class OrderController extends Controller
      * order yang sudah 'paid'/'processing'/'completed' tidak akan pernah
      * ter-overwrite lewat endpoint ini.
      */
-    public function cancel(Order $order)
+    public function cancel(Request $request, Order $order)
     {
+        $request->validate(['cancel_token' => 'required|string']);
+
+        // Cocokkan token, bukan cuma ID order (ID gampang ditebak/di-loop).
+        // Tanpa ini siapa pun bisa cancel order pending milik orang lain.
+        abort_unless(
+            hash_equals((string) $order->cancel_token, (string) $request->cancel_token),
+            403
+        );
+
         if ($order->status === 'pending') {
             $order->update(['status' => 'failed']);
         }

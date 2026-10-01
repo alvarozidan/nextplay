@@ -117,7 +117,7 @@ export default function CheckoutShow({ product, client_key }: Props) {
     // tidak nyangkut selamanya di "pending" (menunggu pembayaran) di
     // riwayat transaksi. Order yang sudah 'paid' tidak akan terpengaruh,
     // karena endpoint ini hanya mengubah order yang masih 'pending'.
-    const cancelOrder = (orderId: number | string) => {
+    const cancelOrder = (orderId: number | string, cancelToken: string) => {
         const csrfToken =
             document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
@@ -127,6 +127,7 @@ export default function CheckoutShow({ product, client_key }: Props) {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
             },
+            body: JSON.stringify({ cancel_token: cancelToken }),
             keepalive: true,
         }).catch(() => {
             // Diamkan saja kalau request cancel gagal terkirim (mis. user
@@ -164,7 +165,19 @@ export default function CheckoutShow({ product, client_key }: Props) {
                 }),
             });
 
-            const { snap_token, order_id } = await res.json();
+            const body = await res.json();
+
+            if (!res.ok) {
+                // Backend gagal minta snap token (mis. Midtrans tidak bisa
+                // dihubungi / server key salah). Tampilkan pesan asli dari
+                // server, jangan lanjut panggil window.snap.pay dengan
+                // token kosong.
+                alert(body.message ?? 'Gagal memulai pembayaran, coba lagi.');
+                setSnapLoading(false);
+                return;
+            }
+
+            const { snap_token, order_id, cancel_token } = body;
 
             window.snap.pay(snap_token, {
                 onSuccess: () => {
@@ -174,13 +187,13 @@ export default function CheckoutShow({ product, client_key }: Props) {
                     window.location.href = '/';
                 },
                 onError: () => {
-                    cancelOrder(order_id);
+                    cancelOrder(order_id, cancel_token);
                     alert('Pembayaran gagal / terjadi kesalahan. Silakan coba lagi.');
                     setSnapLoading(false);
                 },
                 onClose: () => {
                     // User menutup popup tanpa menyelesaikan pembayaran.
-                    cancelOrder(order_id);
+                    cancelOrder(order_id, cancel_token);
                     setSnapLoading(false);
                 },
             });

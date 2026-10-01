@@ -19,7 +19,7 @@ class MidtransController extends Controller
 
         $expectedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
 
-        if ($expectedSignature !== ($payload['signature_key'] ?? '')) {
+        if (!hash_equals($expectedSignature, (string) ($payload['signature_key'] ?? ''))) {
             Log::warning('Midtrans: signature tidak valid', ['order_id' => $orderId]);
             return response()->json(['message' => 'Invalid signature'], 403);
         }

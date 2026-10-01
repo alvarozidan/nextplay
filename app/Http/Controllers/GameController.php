@@ -10,7 +10,7 @@ class GameController extends Controller
 {
     public function index()
     {
-        $games = Game::all();
+        $games = Game::where('is_active', true)->get();
 
         return Inertia::render('Games/Index', [
             'games' => $games,
@@ -19,6 +19,8 @@ class GameController extends Controller
 
     public function show(Game $game)
     {
+        abort_if(!$game->is_active, 404);
+
         $game->load(['products' => function($q) {
             $q->where('is_active', true)->orderBy('price');
         }]);
